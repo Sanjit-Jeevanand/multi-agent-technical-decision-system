@@ -8,12 +8,6 @@ from multi_agent_decision_system.graph.planner_graph import build_planner_graph
 
 
 def test_planner_graph_executes_planner_node():
-    """
-    LangGraph should:
-    - Accept an initial DecisionState
-    - Execute the planner node
-    - Return a DecisionState with a populated plan
-    """
 
     # ------------------
     # Arrange
@@ -47,7 +41,7 @@ def test_planner_graph_executes_planner_node():
         "product_risk": None,
         "assumptions": [],
         "clarifying_questions": [],
-        "model_used": "gpt-4.1",
+        "model_used": "gpt-5.1",
         "estimated_tokens_in": 100,
         "estimated_tokens_out": 150,
     }
