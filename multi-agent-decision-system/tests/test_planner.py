@@ -53,7 +53,7 @@ def test_planner_produces_valid_bounded_output():
         },
         "assumptions": ["Traffic patterns are relatively stable"],
         "clarifying_questions": [],
-        "model_used": "gpt-4.1",
+        "model_used": "gpt-5.1",
         "estimated_tokens_in": 120,
         "estimated_tokens_out": 220,
     }
@@ -92,7 +92,7 @@ def test_planner_produces_valid_bounded_output():
     assert sum(d is not None for d in dimensions) <= 4
 
     # Cost metadata must be populated
-    assert updated_state.plan.model_used == "gpt-4.1"
+    assert updated_state.plan.model_used == "gpt-5.1"
     assert updated_state.plan.estimated_tokens_in > 0
     assert updated_state.plan.estimated_tokens_out > 0
 

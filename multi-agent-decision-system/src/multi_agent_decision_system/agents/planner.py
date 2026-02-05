@@ -72,33 +72,33 @@ Output Format (STRICT)
 You MUST output valid JSON only.
 You MUST match this schema exactly:
 
-{
-  "systems": {
+{{
+  "systems": {{
     "question": "...",
     "why_it_matters": "...",
     "key_unknowns": ["..."]
-  },
-  "ml": {
+  }},
+  "ml": {{
     "question": "...",
     "why_it_matters": "...",
     "key_unknowns": ["..."]
-  },
-  "cost": {
+  }},
+  "cost": {{
     "question": "...",
     "why_it_matters": "...",
     "key_unknowns": ["..."]
-  },
-  "product_risk": {
+  }},
+  "product_risk": {{
     "question": "...",
     "why_it_matters": "...",
     "key_unknowns": ["..."]
-  },
+  }},
   "assumptions": ["..."],
   "clarifying_questions": ["..."],
   "model_used": "gpt-5.1",
   "estimated_tokens_in": <integer>,
   "estimated_tokens_out": <integer>
-}
+}}
 
 Omit any dimension that is not relevant.
 Do not include explanations outside this JSON.
