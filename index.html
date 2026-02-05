@@ -375,17 +375,6 @@
 
                         <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
 
-                        <!-- Critic -->
-                        <div id="agent-critic" class="agent-node w-28 p-3 rounded-lg border border-slate-700 bg-slate-900/50 text-center cursor-pointer" onclick="showAgentDetails('critic')">
-                            <div class="w-8 h-8 mx-auto mb-2 rounded bg-slate-800 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                            </div>
-                            <p class="text-[10px] font-medium text-slate-300">Critic</p>
-                            <p class="text-[9px] text-slate-500 mt-1">Challenges</p>
-                        </div>
-
-                        <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-
                         <!-- Disagreement Detector -->
                         <div id="agent-detector" class="agent-node w-32 p-3 rounded-lg border border-slate-700 bg-slate-900/50 text-center cursor-pointer" onclick="showAgentDetails('detector')">
                             <div class="w-8 h-8 mx-auto mb-2 rounded bg-slate-800 flex items-center justify-center">
@@ -393,6 +382,17 @@
                             </div>
                             <p class="text-[10px] font-medium text-slate-300">Detector</p>
                             <p class="text-[9px] text-slate-500 mt-1">Finds conflicts</p>
+                        </div>
+
+                        <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+
+                        <!-- Critic -->
+                        <div id="agent-critic" class="agent-node w-28 p-3 rounded-lg border border-slate-700 bg-slate-900/50 text-center cursor-pointer" onclick="showAgentDetails('critic')">
+                            <div class="w-8 h-8 mx-auto mb-2 rounded bg-slate-800 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            </div>
+                            <p class="text-[10px] font-medium text-slate-300">Critic</p>
+                            <p class="text-[9px] text-slate-500 mt-1">Challenges</p>
                         </div>
 
                         <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
@@ -685,22 +685,6 @@
 }`,
                 code: 'src/agents/product_agent.py'
             },
-            critic: {
-                name: 'Critic Agent',
-                role: 'Challenges assumptions and flags overconfidence or missing considerations',
-                model: 'GPT-4.1',
-                temp: '0.3',
-                input: `{
-  "all_recommendations": [...],
-  "specialist_confidences": [...]
-}`,
-                output: `{
-  "challenged_assumptions": ["string"],
-  "overconfidence_flags": [{"agent": "string", "concern": "string"}],
-  "missing_considerations": ["string"]
-}`,
-                code: 'src/agents/critic.py'
-            },
             detector: {
                 name: 'Disagreement Detector',
                 role: 'Identifies and characterizes conflicts between specialist recommendations',
@@ -717,6 +701,22 @@
   "agent_positions": {...}
 }`,
                 code: 'src/agents/disagreement_detector.py'
+            },
+            critic: {
+                name: 'Critic Agent',
+                role: 'Challenges assumptions and flags overconfidence or missing considerations',
+                model: 'GPT-4.1',
+                temp: '0.3',
+                input: `{
+  "all_recommendations": [...],
+  "specialist_confidences": [...]
+}`,
+                output: `{
+  "challenged_assumptions": ["string"],
+  "overconfidence_flags": [{"agent": "string", "concern": "string"}],
+  "missing_considerations": ["string"]
+}`,
+                code: 'src/agents/critic.py'
             },
             synthesizer: {
                 name: 'Synthesizer Agent',
@@ -932,31 +932,9 @@
                 setTimeout(() => addAgentCard('specialist', spec), i * 200);
             });
             
-            await sleep(600);
-            
-            // Step 3: Critic
-            await activateAgent('critic', 1000);
-            document.getElementById('criticPanel').classList.remove('hidden');
-            document.getElementById('criticContent').innerHTML = `
-                <div class="space-y-2">
-                    ${mockDecision.critic.challenged_assumptions.map(a => `
-                        <div class="flex items-start gap-2 text-xs text-slate-400">
-                            <svg class="w-3.5 h-3.5 text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                            <span>${a}</span>
-                        </div>
-                    `).join('')}
-                    ${mockDecision.critic.overconfidence_flags.map(f => `
-                        <div class="flex items-start gap-2 text-xs text-slate-400">
-                            <svg class="w-3.5 h-3.5 text-amber-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                            <span><strong>${f.agent}:</strong> ${f.concern}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-            
             await sleep(400);
             
-            // Step 4: Disagreement Detector
+            // Step 3: Disagreement Detector
             await activateAgent('detector', 600);
             document.getElementById('disagreementPanel').classList.remove('hidden');
             document.getElementById('disagreementContent').innerHTML = `
@@ -991,6 +969,29 @@
                     </div>
                 </div>
             `;
+            
+            await sleep(600);
+            
+            // Step 4: Critic
+            await activateAgent('critic', 1000);
+            document.getElementById('criticPanel').classList.remove('hidden');
+            document.getElementById('criticContent').innerHTML = `
+                <div class="space-y-2">
+                    ${mockDecision.critic.challenged_assumptions.map(a => `
+                        <div class="flex items-start gap-2 text-xs text-slate-400">
+                            <svg class="w-3.5 h-3.5 text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            <span>${a}</span>
+                        </div>
+                    `).join('')}
+                    ${mockDecision.critic.overconfidence_flags.map(f => `
+                        <div class="flex items-start gap-2 text-xs text-slate-400">
+                            <svg class="w-3.5 h-3.5 text-amber-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            <span><strong>${f.agent}:</strong> ${f.concern}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
             
             await sleep(400);
             

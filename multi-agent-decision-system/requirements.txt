@@ -1,0 +1,5 @@
+pydantic>=1.10
+langchain>=0.1.0
+langgraph>=0.0.30
+openai>=1.0.0
+pytest>=7.0
