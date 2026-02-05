@@ -49,6 +49,9 @@ class InputLog(BaseModel):
     # Raw user-provided input at run start (immutable)
     initial_input: Dict
 
+    # Agent-scoped inputs logged directly by each agent for audit and UI inspection.
+    agent_inputs: Dict[str, Dict] = Field(default_factory=dict)
+
     # Inputs recorded per iteration, keyed by iteration index
     iterations: Dict[int, IterationInputLog] = Field(default_factory=dict)
 
@@ -116,16 +119,21 @@ class PlannerOutput(BaseModel):
 # AGENT OUTPUTS
 # -----------------------------
 
-class AgentRisk(BaseModel):
-    description: str
-    severity: Literal["low", "medium", "high"]
-
+# Shared output contract for all specialist agents (Phase 3).
+RecommendationLabel = Literal[
+    "option_a",
+    "option_b",
+    "hybrid",
+    "defer",
+    "insufficient_information"
+]
 
 class AgentOutput(BaseModel):
-    recommendation: str
+    agent_name: str
+    recommendation: RecommendationLabel
     confidence: float = Field(ge=0.0, le=1.0)
     benefits: List[str]
-    risks: List[AgentRisk]
+    risks: List[str]
 
 
 # -----------------------------
@@ -162,7 +170,7 @@ class SynthesisOutput(BaseModel):
     final_decision: str
     rationale: List[str]
     rejected_alternatives: List[RejectedAlternative]
-    accepted_risks: List[AgentRisk]
+    accepted_risks: List[str]  # Accepted risks are referenced by description only; severity is resolved earlier by the critic.
 
 
 # -----------------------------

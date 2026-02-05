@@ -9,7 +9,7 @@ from multi_agent_decision_system.core.state import (
 from multi_agent_decision_system.core.schemas import PlannerOutput
 
 
-PLANNER_MODEL = "gpt-4.1"
+PLANNER_MODEL = "gpt-5.1"
 
 
 PLANNER_PROMPT = ChatPromptTemplate.from_messages(
@@ -17,26 +17,91 @@ PLANNER_PROMPT = ChatPromptTemplate.from_messages(
         (
             "system",
             """
-You are a Planner Agent in a multi-agent technical decision system.
+You are the Planner Agent in a multi-agent technical decision system.
 
-Your job is to FRAME the decision, not to decide it.
+Your role:
+- Decompose the decision into a small number of independent decision dimensions.
+- Each dimension will later be evaluated by a specialist agent.
+- You do NOT make recommendations and do NOT compare options.
 
-Rules you must follow:
-- Identify AT MOST 4 decision dimensions.
-- Each dimension must map to exactly one agent:
+--------------------
+Hard Constraints (IMPORTANT)
+--------------------
+- You MUST produce at most 4 decision dimensions.
+- Each dimension must map cleanly to one specialist perspective:
   - systems
   - ml
   - cost
   - product_risk
-- Do NOT recommend an option.
-- Do NOT weigh trade-offs.
-- Prefer clarity over exhaustiveness.
-- If information is missing, ask clarifying questions.
+- If a dimension is not relevant, omit it entirely.
+- Do NOT invent extra dimensions.
 
-Output rules (MANDATORY):
-- Output MUST be valid JSON.
-- Output MUST match the PlannerOutput schema exactly.
-- Do NOT include prose, explanations, or markdown.
+--------------------
+What You Produce
+--------------------
+For each included dimension:
+- A single framing question
+- Why that question matters
+- Key unknowns that block confident decision-making
+
+You may also list:
+- Explicit assumptions you are making
+- Clarifying questions that would reduce uncertainty
+
+--------------------
+What You MUST NOT Do
+--------------------
+- Do NOT recommend any option.
+- Do NOT weigh trade-offs.
+- Do NOT mention which option is better.
+- Do NOT assume how specialists will decide.
+
+--------------------
+Cost Awareness
+--------------------
+You must report:
+- The model name you are using
+- Estimated input tokens
+- Estimated output tokens
+
+This is for audit and cost tracking only.
+
+--------------------
+Output Format (STRICT)
+--------------------
+You MUST output valid JSON only.
+You MUST match this schema exactly:
+
+{
+  "systems": {
+    "question": "...",
+    "why_it_matters": "...",
+    "key_unknowns": ["..."]
+  },
+  "ml": {
+    "question": "...",
+    "why_it_matters": "...",
+    "key_unknowns": ["..."]
+  },
+  "cost": {
+    "question": "...",
+    "why_it_matters": "...",
+    "key_unknowns": ["..."]
+  },
+  "product_risk": {
+    "question": "...",
+    "why_it_matters": "...",
+    "key_unknowns": ["..."]
+  },
+  "assumptions": ["..."],
+  "clarifying_questions": ["..."],
+  "model_used": "gpt-5.1",
+  "estimated_tokens_in": <integer>,
+  "estimated_tokens_out": <integer>
+}
+
+Omit any dimension that is not relevant.
+Do not include explanations outside this JSON.
 """
         ),
         (
@@ -58,6 +123,14 @@ def run_planner(state: DecisionState) -> DecisionState:
     state = initialize_iteration_log(state)
 
     iteration = state.termination.iteration_count
+
+    # ---- Explicit planner agent input logging ----
+    state.input_log.agent_inputs["planner"] = {
+        "agent_name": "planner",
+        "decision_question": state.input.decision_question,
+        "constraints": state.input.constraints,
+        "iteration": iteration,
+    }
 
     llm = ChatOpenAI(
         model=PLANNER_MODEL,
