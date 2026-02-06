@@ -1,32 +1,54 @@
 from multi_agent_decision_system.core.schema import GateOutput, GateDecision
+from multi_agent_decision_system.core.state_v2 import DecisionState
 
-def run_gate(state) -> GateOutput:
-    """
-    Deterministic gate check.
-    No LLM call.
-    """
 
+def run_gate(state: DecisionState) -> GateOutput:
     critic = state.current.critic
     synthesizer = state.current.synthesizer
 
-    blocking_reasons = []
-    required_actions = []
+    # Escape hatch: explicit force approve
+    if getattr(state, "force_approve", False):
+        return GateOutput(
+            agent_name="gate",
+            decision=GateDecision(
+                approved=True,
+                blocking_reasons=[],
+                required_actions=[],
+            ),
+        )
 
-    if critic and critic.requires_revision:
-        blocking_reasons.append("Critic requires revision due to high-impact issues.")
-        required_actions.append("Address high-impact critic issues before proceeding.")
+    # Missing decision
+    if synthesizer is None or synthesizer.final_recommendation is None:
+        return GateOutput(
+            agent_name="gate",
+            decision=GateDecision(
+                approved=False,
+                blocking_reasons=["No final recommendation produced."],
+                required_actions=["Rerun decision or inspect synthesizer output."],
+            ),
+        )
 
-    if synthesizer.final_recommendation == "insufficient_information":
-        blocking_reasons.append("Synthesizer reports insufficient information.")
-        required_actions.append("Provide missing inputs or clarify constraints.")
+    # Approval rule: approve only if critic does NOT require revision
+    if critic and not critic.requires_revision:
+        return GateOutput(
+            agent_name="gate",
+            decision=GateDecision(
+                approved=True,
+                blocking_reasons=[],
+                required_actions=[],
+            ),
+        )
 
-    approved = len(blocking_reasons) == 0
-
+    # Block otherwise and require explicit user action
     return GateOutput(
         agent_name="gate",
         decision=GateDecision(
-            approved=approved,
-            blocking_reasons=blocking_reasons,
-            required_actions=required_actions,
+            approved=False,
+            blocking_reasons=[
+                "Critic requires revision; explicit user action is required."
+            ],
+            required_actions=[
+                "Accept flagged risks or update constraints to proceed."
+            ],
         ),
     )

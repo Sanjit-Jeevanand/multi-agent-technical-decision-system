@@ -70,6 +70,12 @@ Interpretation rules:
 - Proceed when risks are bounded, reversible, or operationally containable.
 - Defer ONLY when unresolved unknowns make any action irresponsible.
 
+User constraints (iteration overrides):
+- Rejected recommendations MUST NOT be selected under any circumstance.
+- If option_a or option_b is rejected, it is considered invalid for this iteration.
+- If all viable options are rejected, you MUST output "defer".
+- Accepted risks reduce uncertainty but do NOT remove responsibility to list unresolved_risks.
+
 ━━━━━━━━━━━━━━━━━━━━
 RECOMMENDATION GUIDANCE
 ━━━━━━━━━━━━━━━━━━━━
@@ -122,8 +128,8 @@ Output Format (STRICT)
 """
         ),
         (
-            "human",
-            """
+    "human",
+    """
 Decision question:
 {decision_question}
 
@@ -132,6 +138,9 @@ Options:
 
 Constraints:
 {constraints}
+
+Previous iteration context (if any):
+{iteration_context}
 
 Specialist agent outputs:
 {agent_outputs}
@@ -142,7 +151,7 @@ Detector output:
 Critic output:
 {critic_output}
 """
-        ),
+),
     ]
 )
 
@@ -194,11 +203,46 @@ def run_synthesizer_agent(state: DecisionState) -> dict:
     if hasattr(constraints, "model_dump"):
         constraints = constraints.model_dump()
 
+    # Compute iteration_context
+    iteration_context = None
+
+    if state.iteration > 1 and state.history:
+        last_entry = state.history[-1]
+
+        iteration_context = {
+            "previous_final_recommendation": (
+                last_entry.synthesizer.final_recommendation
+                if last_entry.synthesizer
+                else None
+            ),
+            "previous_confidence": (
+                last_entry.synthesizer.confidence
+                if last_entry.synthesizer
+                else None
+            ),
+            "accepted_risks": (
+                last_entry.delta_applied.accepted_risks
+                if last_entry.delta_applied
+                else []
+            ),
+            "rejected_recommendations": (
+                last_entry.delta_applied.rejected_recommendations
+                if last_entry.delta_applied
+                else []
+            ),
+            "notes": (
+                last_entry.delta_applied.notes
+                if last_entry.delta_applied
+                else None
+            ),
+        }
+
     # Format prompt
     messages = SYNTHESIZER_AGENT_PROMPT.format_messages(
         decision_question=state.input.decision_question,
         options=options,
         constraints=constraints,
+        iteration_context=iteration_context,
         agent_outputs=specialist_outputs,
         detector_output=detector_output,
         critic_output=critic_output,
