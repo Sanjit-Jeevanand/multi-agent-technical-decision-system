@@ -91,30 +91,34 @@ Assumptions:
 )
 
 
-def run_product_risk_agent(state: DecisionState) -> DecisionState:
+def run_product_risk_agent(state: DecisionState) -> dict:
     """
-    Execute the Product & Risk Agent with strict input/output logging.
+    Execute the Product & Risk Agent.
+    Returns PARTIAL state updates only (LangGraph-safe).
     """
 
     state = initialize_iteration_log(state)
     iteration = state.termination.iteration_count
 
-    # ---- Extract planner slice ----
-    planner_slice = None
-    if state.plan and state.plan.product_risk:
-        planner_slice = state.plan.product_risk
+    planner_slice = (
+        state.plan.product_risk
+        if state.plan and state.plan.product_risk
+        else None
+    )
 
-    # ---- Explicit product/risk agent input logging ----
-    state.input_log.agent_inputs["product_risk"] = {
+    agent_input = {
         "agent_name": "product_risk",
         "decision_question": state.input.decision_question,
-        "constraints": state.input.constraints,
+        "constraints": (
+            state.input.constraints.model_dump()
+            if state.input.constraints
+            else {}
+        ),
         "planner_slice": planner_slice,
         "assumptions": state.plan.assumptions if state.plan else [],
         "iteration": iteration,
     }
 
-    # ---- Invoke model ----
     llm = ChatOpenAI(
         model=PRODUCT_RISK_AGENT_MODEL,
         temperature=0.3,
@@ -122,15 +126,14 @@ def run_product_risk_agent(state: DecisionState) -> DecisionState:
 
     messages = PRODUCT_RISK_AGENT_PROMPT.format_messages(
         decision_question=state.input.decision_question,
-        constraints=state.input.constraints or {},
+        constraints=agent_input["constraints"],
         planner_slice=planner_slice or {},
-        assumptions=state.plan.assumptions if state.plan else [],
+        assumptions=agent_input["assumptions"],
     )
 
     response = llm.invoke(messages)
     raw_text = response.content
 
-    # ---- Parse + validate output ----
     try:
         agent_output = AgentOutput.model_validate_json(raw_text)
     except ValidationError as e:
@@ -138,10 +141,18 @@ def run_product_risk_agent(state: DecisionState) -> DecisionState:
             f"Product/Risk Agent output schema validation failed: {e}"
         )
 
-    # ---- Write authoritative state ----
-    state.agent_outputs["product_risk"] = agent_output
-
-    # ---- Log output ----
-    state.output_log.agent_outputs["product_risk"] = agent_output.model_dump()
-
-    return state
+    return {
+        "agent_outputs": {
+            "product_risk": agent_output,
+        },
+        "input_log": {
+            "agent_inputs": {
+                "product_risk": [agent_input],
+            }
+        },
+        "output_log": {
+            "agent_outputs": {
+                "product_risk": [agent_output.model_dump()],
+            }
+        },
+    }

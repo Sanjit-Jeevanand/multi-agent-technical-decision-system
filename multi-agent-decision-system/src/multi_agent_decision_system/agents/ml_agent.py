@@ -84,7 +84,7 @@ Assumptions:
 )
 
 
-def run_ml_agent(state: DecisionState) -> DecisionState:
+def run_ml_agent(state: DecisionState) -> dict:
 
     state = initialize_iteration_log(state)
     iteration = state.termination.iteration_count
@@ -95,13 +95,15 @@ def run_ml_agent(state: DecisionState) -> DecisionState:
         planner_slice = state.plan.ml
 
     # ---- Explicit ML agent input logging ----
-    state.input_log.agent_inputs["ml"] = {
-        "agent_name": "ml",
-        "decision_question": state.input.decision_question,
-        "constraints": state.input.constraints,
-        "planner_slice": planner_slice,
-        "assumptions": state.plan.assumptions if state.plan else [],
-        "iteration": iteration,
+    input_log_update = {
+        "ml": {
+            "agent_name": "ml",
+            "decision_question": state.input.decision_question,
+            "constraints": state.input.constraints,
+            "planner_slice": planner_slice,
+            "assumptions": state.plan.assumptions if state.plan else [],
+            "iteration": iteration,
+        }
     }
 
     # ---- Invoke model ----
@@ -126,10 +128,15 @@ def run_ml_agent(state: DecisionState) -> DecisionState:
     except ValidationError as e:
         raise RuntimeError(f"ML Agent output schema validation failed: {e}")
 
-    # ---- Write authoritative state ----
-    state.agent_outputs["ml"] = agent_output
-
-    # ---- Log output ----
-    state.output_log.agent_outputs["ml"] = agent_output.model_dump()
-
-    return state
+    # ---- Partial update and append-only logging ----
+    return {
+        "agent_outputs": {"ml": agent_output},
+        "input_log": {
+            "agent_inputs": input_log_update
+        },
+        "output_log": {
+            "agent_outputs": {
+                "ml": [agent_output.model_dump()]
+            }
+        }
+    }

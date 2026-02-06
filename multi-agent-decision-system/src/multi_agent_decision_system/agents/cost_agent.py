@@ -90,21 +90,28 @@ Assumptions:
 )
 
 
-def run_cost_agent(state: DecisionState) -> DecisionState:
+def run_cost_agent(state: DecisionState) -> dict:
+    """
+    Cost agent returns PARTIAL state updates only.
+    Safe for parallel execution in LangGraph.
+    """
 
+    # ---- Initialize iteration-aware logs (idempotent) ----
     state = initialize_iteration_log(state)
     iteration = state.termination.iteration_count
 
     # ---- Extract planner slice ----
-    planner_slice = None
-    if state.plan and state.plan.cost:
-        planner_slice = state.plan.cost
+    planner_slice = state.plan.cost if state.plan and state.plan.cost else None
 
-    # ---- Explicit cost agent input logging ----
-    state.input_log.agent_inputs["cost"] = {
+    # ---- Build explicit agent input payload ----
+    agent_input = {
         "agent_name": "cost",
         "decision_question": state.input.decision_question,
-        "constraints": state.input.constraints,
+        "constraints": (
+            state.input.constraints.model_dump()
+            if state.input.constraints
+            else {}
+        ),
         "planner_slice": planner_slice,
         "assumptions": state.plan.assumptions if state.plan else [],
         "iteration": iteration,
@@ -118,9 +125,9 @@ def run_cost_agent(state: DecisionState) -> DecisionState:
 
     messages = COST_AGENT_PROMPT.format_messages(
         decision_question=state.input.decision_question,
-        constraints=state.input.constraints or {},
+        constraints=agent_input["constraints"],
         planner_slice=planner_slice or {},
-        assumptions=state.plan.assumptions if state.plan else [],
+        assumptions=agent_input["assumptions"],
     )
 
     response = llm.invoke(messages)
@@ -132,10 +139,19 @@ def run_cost_agent(state: DecisionState) -> DecisionState:
     except ValidationError as e:
         raise RuntimeError(f"Cost Agent output schema validation failed: {e}")
 
-    # ---- Write authoritative state ----
-    state.agent_outputs["cost"] = agent_output
-
-    # ---- Log output ----
-    state.output_log.agent_outputs["cost"] = agent_output.model_dump()
-
-    return state
+    # ---- Return PARTIAL update only ----
+    return {
+        "agent_outputs": {
+            "cost": agent_output,
+        },
+        "input_log": {
+            "agent_inputs": {
+                "cost": [agent_input],
+            }
+        },
+        "output_log": {
+            "agent_outputs": {
+                "cost": [agent_output.model_dump()],
+            }
+        },
+    }
