@@ -1,7 +1,6 @@
 import json
 from pydantic import ValidationError
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
+from openai import OpenAI
 
 from multi_agent_decision_system.core.schemas import PlannerOutput
 from multi_agent_decision_system.core.state import DecisionState
@@ -10,11 +9,7 @@ from multi_agent_decision_system.core.state import DecisionState
 PLANNER_MODEL = "gpt-5.1"
 
 
-PLANNER_PROMPT = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            """
+PLANNER_PROMPT = """
 You are the Planner Agent in a multi-agent technical decision system.
 
 Your role:
@@ -67,20 +62,13 @@ Output Format (STRICT)
 --------------------
 Output valid JSON only.
 Match the PlannerOutput schema exactly.
-"""
-        ),
-        (
-            "human",
-            """
+
 Decision question:
 {decision_question}
 
 Constraints:
 {constraints}
 """
-        ),
-    ]
-)
 
 
 def run_planner(state: DecisionState) -> dict:
@@ -92,20 +80,23 @@ def run_planner(state: DecisionState) -> dict:
     - Returns ONLY a LangGraph-safe partial update
     """
 
-    llm = ChatOpenAI(
-        model=PLANNER_MODEL,
-        temperature=0,
-    )
+    client = OpenAI()
 
-    messages = PLANNER_PROMPT.format_messages(
+    prompt = PLANNER_PROMPT.format(
         decision_question=state.input.decision_question,
         constraints=state.input.constraints.model_dump(),
     )
 
-    response = llm.invoke(messages)
+    response = client.responses.create(
+        model=PLANNER_MODEL,
+        input=prompt,
+    )
 
     try:
-        plan = PlannerOutput.model_validate_json(response.content)
+        text = response.output_text
+        if not text:
+            text = "".join(part.text for part in response.output if hasattr(part, "text"))
+        plan = PlannerOutput.model_validate_json(text)
     except ValidationError as e:
         raise RuntimeError(f"Planner output invalid: {e}")
 

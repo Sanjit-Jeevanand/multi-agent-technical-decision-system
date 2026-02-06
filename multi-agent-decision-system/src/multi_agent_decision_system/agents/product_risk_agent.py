@@ -1,20 +1,15 @@
 import json
 from pydantic import ValidationError
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
+from openai import OpenAI
 
 from multi_agent_decision_system.core.schemas import AgentOutput
 from multi_agent_decision_system.core.state import DecisionState
 
 
-PRODUCT_RISK_MODEL = "gpt-5.1-mini"
+PRODUCT_RISK_MODEL = "gpt-5-mini"
 
 
-PRODUCT_RISK_AGENT_PROMPT = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            """
+PRODUCT_RISK_PROMPT_STR = """
 You are the Product & Risk Agent in a multi-agent technical decision system.
 
 Your task:
@@ -58,6 +53,18 @@ Output rules:
 - Match the AgentOutput schema exactly.
 - No explanations or markdown.
 
+List constraints (IMPORTANT):
+- benefits: 2–4 items maximum
+- risks: 2–4 items maximum
+- Each list item must be a single, atomic sentence
+- Do NOT use semicolons or conjunctions ("and", "or") inside list items
+
+JSON correctness rules (CRITICAL):
+- Do not include trailing commas.
+- Do not include comments.
+- Do not include extra whitespace outside JSON.
+- Ensure all arrays and objects are properly closed.
+
 Output format:
 {{
   "agent_name": "product_risk",
@@ -66,11 +73,7 @@ Output format:
   "benefits": ["..."],
   "risks": ["..."]
 }}
-"""
-        ),
-        (
-            "human",
-            """
+
 Decision question:
 {decision_question}
 
@@ -83,9 +86,6 @@ Planner context (product/risk slice):
 Assumptions:
 {assumptions}
 """
-        ),
-    ]
-)
 
 
 def run_product_risk_agent(state: DecisionState) -> dict:
@@ -100,22 +100,22 @@ def run_product_risk_agent(state: DecisionState) -> dict:
         else None
     )
 
-    llm = ChatOpenAI(
-        model=PRODUCT_RISK_MODEL,
-        temperature=0,
-    )
-
-    messages = PRODUCT_RISK_AGENT_PROMPT.format_messages(
+    client = OpenAI()
+    prompt = PRODUCT_RISK_PROMPT_STR.format(
         decision_question=state.input.decision_question,
         constraints=state.input.constraints.model_dump(),
         planner_slice=planner_slice or {},
         assumptions=state.plan.assumptions if state.plan else [],
     )
-
-    response = llm.invoke(messages)
+    response = client.responses.create(
+        model=PRODUCT_RISK_MODEL,
+        input=prompt,
+        reasoning={"effort": "minimal"},
+    )
+    content = response.output_text
 
     try:
-        agent_output = AgentOutput.model_validate_json(response.content)
+        agent_output = AgentOutput.model_validate_json(content)
     except ValidationError as e:
         raise RuntimeError(f"Product/Risk Agent output invalid: {e}")
 

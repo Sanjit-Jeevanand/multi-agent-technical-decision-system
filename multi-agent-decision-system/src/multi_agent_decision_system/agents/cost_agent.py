@@ -1,13 +1,13 @@
 import json
 from pydantic import ValidationError
-from langchain_openai import ChatOpenAI
+from openai import OpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
 from multi_agent_decision_system.core.schemas import AgentOutput
 from multi_agent_decision_system.core.state import DecisionState
 
 
-COST_MODEL = "gpt-5.1-mini"
+COST_MODEL = "gpt-5-mini"
 
 
 COST_AGENT_PROMPT = ChatPromptTemplate.from_messages(
@@ -57,6 +57,18 @@ Output rules:
 - Match the AgentOutput schema exactly.
 - No explanations or markdown.
 
+List constraints (IMPORTANT):
+- benefits: 2–4 items maximum
+- risks: 2–4 items maximum
+- Each list item must be a single, atomic sentence
+- Do NOT use semicolons or conjunctions ("and", "or") inside list items
+
+JSON correctness rules (CRITICAL):
+- Do not include trailing commas.
+- Do not include comments.
+- Do not include extra whitespace outside JSON.
+- Ensure all arrays and objects are properly closed.
+
 Output format:
 {{
   "agent_name": "cost",
@@ -99,10 +111,7 @@ def run_cost_agent(state: DecisionState) -> dict:
         else None
     )
 
-    llm = ChatOpenAI(
-        model=COST_MODEL,
-        temperature=0,
-    )
+    client = OpenAI()
 
     messages = COST_AGENT_PROMPT.format_messages(
         decision_question=state.input.decision_question,
@@ -111,10 +120,16 @@ def run_cost_agent(state: DecisionState) -> dict:
         assumptions=state.plan.assumptions if state.plan else [],
     )
 
-    response = llm.invoke(messages)
+    response = client.responses.create(
+        model=COST_MODEL,
+        input="\n".join(m.content for m in messages),
+        reasoning={"effort": "minimal"},
+    )
 
     try:
-        agent_output = AgentOutput.model_validate_json(response.content)
+        agent_output = AgentOutput.model_validate_json(
+            response.output_text
+        )
     except ValidationError as e:
         raise RuntimeError(f"Cost Agent output invalid: {e}")
 
