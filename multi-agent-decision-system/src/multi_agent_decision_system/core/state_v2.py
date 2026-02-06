@@ -1,6 +1,13 @@
 from __future__ import annotations
 from typing import Dict, List, Optional
 from pydantic import BaseModel, Field
+from enum import Enum
+
+
+class GatePolicyTier(str, Enum):
+    EXPLORATION = "exploration"   # Iteration 1, pre-user intent
+    COMMITMENT = "commitment"     # After user input
+    OVERRIDE = "override"         # Force approve
 
 from multi_agent_decision_system.core.schema import (
     DecisionInput,
@@ -74,18 +81,17 @@ class CurrentIteration(BaseModel):
 # =========================
 
 class DecisionState(BaseModel):
-    """
-    Runtime state for a decision.
-    This is NOT an LLM schema.
-    """
-
     input: DecisionInput
+    iteration: int = 0
 
-    iteration: int = 1
-    max_iterations: int = 1
+    current: CurrentIteration
+    history: list[IterationSnapshot] = []
 
-    current: CurrentIteration = Field(default_factory=lambda: CurrentIteration(iteration=1))
-    history: List[IterationSnapshot] = []
+    # 🔐 NEW: explicit authority tier
+    gate_tier: GatePolicyTier = GatePolicyTier.EXPLORATION
+
+    # Optional but useful
+    force_approve: bool = False
 
     approved: bool = False
     final_decision: Optional[SynthesizerOutput] = None
@@ -108,17 +114,14 @@ class DecisionState(BaseModel):
             )
         )
 
-    def can_iterate(self) -> bool:
-        return self.iteration < self.max_iterations
-
     def start_next_iteration(self, delta: DecisionDelta):
-        if not self.can_iterate():
-            raise RuntimeError("Max iterations reached")
-
         self.snapshot_current(delta)
 
         self.iteration += 1
         self.current = CurrentIteration(iteration=self.iteration)
+
+        # Shift authority after first user input
+        self.gate_tier = GatePolicyTier.COMMITMENT
 
         # NOTE: input mutation (constraints updates etc.)
         if delta.updated_constraints:

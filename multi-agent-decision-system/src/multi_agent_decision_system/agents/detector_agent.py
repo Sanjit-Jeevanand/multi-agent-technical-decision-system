@@ -145,6 +145,27 @@ def run_detector_agent(state: DecisionState) -> dict:
     except ValidationError as e:
         raise RuntimeError(f"Detector Agent output invalid: {e}")
 
+    # Suppress conflicts already acknowledged by the user in the previous iteration
+    accepted_risks = []
+    if hasattr(state, "history") and state.history:
+        last_snapshot = state.history[-1]
+        if last_snapshot.delta_applied:
+            accepted_risks = last_snapshot.delta_applied.accepted_risks or []
+
+    if accepted_risks:
+        filtered_conflicts = []
+        for conflict in detector_output.conflicts:
+            if not any(
+                risk.lower() in conflict.description.lower()
+                for risk in accepted_risks
+            ):
+                filtered_conflicts.append(conflict)
+
+        detector_output.conflicts = filtered_conflicts
+        detector_output.has_blocking_conflicts = any(
+            c.severity == "high" for c in detector_output.conflicts
+        )
+
     return {
         "detector": detector_output
     }

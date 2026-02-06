@@ -1,10 +1,8 @@
-# src/multi_agent_decision_system/core/orchestrator.py
-
 from multi_agent_decision_system.core.state_v2 import (
     DecisionState,
     DecisionDelta,
 )
-
+from multi_agent_decision_system.agents.gate_agent import GatePolicyTier
 from multi_agent_decision_system.agents.planner_agent import run_planner_agent
 from multi_agent_decision_system.agents.systems_agent import run_systems_agent
 from multi_agent_decision_system.agents.ml_ai_agent import run_ml_ai_agent
@@ -16,25 +14,34 @@ from multi_agent_decision_system.agents.synthesizer_agent import run_synthesizer
 from multi_agent_decision_system.agents.gate_agent import run_gate
 
 
+def authority_frozen(state: DecisionState) -> bool:
+    # Authority is frozen after iteration 1 by gate tier, not counters.
+    return state.gate_tier != GatePolicyTier.EXPLORATION
+
+
 def run_single_iteration(state: DecisionState) -> DecisionState:
     """
     Runs exactly ONE full decision iteration.
     Does NOT loop.
     """
 
-    # Planner
-    state.current.planner = run_planner_agent(state)["planner"]
+    if state.gate_tier == GatePolicyTier.EXPLORATION:
+        # Planner
+        state.current.planner = run_planner_agent(state)["planner"]
 
-    # Specialists
-    state.current.systems = run_systems_agent(state)["systems"]
-    state.current.ml_ai = run_ml_ai_agent(state)["ml_ai"]
-    state.current.cost = run_cost_agent(state)["cost"]
-    state.current.product = run_product_agent(state)["product"]
+        # Specialists
+        state.current.systems = run_systems_agent(state)["systems"]
+        state.current.ml_ai = run_ml_ai_agent(state)["ml_ai"]
+        state.current.cost = run_cost_agent(state)["cost"]
+        state.current.product = run_product_agent(state)["product"]
 
     # Reasoning
     state.current.detector = run_detector_agent(state)["detector"]
+
+    # Critic is advisory only after iteration 1 (authority frozen by gate tier)
     state.current.critic = run_critic_agent(state)["critic"]
 
+    # After iteration 1, Synthesizer + Gate have final authority
     # Decision
     state.current.synthesizer = run_synthesizer_agent(state)["synthesizer"]
 
@@ -59,9 +66,6 @@ def continue_decision(
     if state.approved:
         return state  
 
-    if not state.can_iterate():
-        return state  
-
     if delta is None:
         return state  
 
@@ -70,4 +74,3 @@ def continue_decision(
 
     # Run ONE more iteration
     return run_single_iteration(state)
-

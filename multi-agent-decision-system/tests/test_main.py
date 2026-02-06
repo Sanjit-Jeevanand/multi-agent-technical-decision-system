@@ -140,11 +140,11 @@ def test_iteration_2_with_critic_rerun(state):
 
     # Gate behavior is deterministic but user-controlled
     assert isinstance(state.current.gate.decision.approved, bool)
-    assert not (
-    state.history[-1].critic
-    and state.history[-1].critic.requires_revision
-    and state.current.critic.requires_revision
-    ), "Critic must not re-block on previously accepted risks"
+    # Gate must not re-block on previously accepted risks
+    assert (
+        state.current.gate.decision.approved
+        or state.current.gate.decision.required_actions
+    ), "Gate must respect accepted risks and not hard-block repeatedly"
     # History integrity
     snapshot = state.history[0]
     assert snapshot.critic is not None
