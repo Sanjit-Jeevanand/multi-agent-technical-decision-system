@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Multi-Agent Decision System – Test Console</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #0f0f0f;
+      color: #eaeaea;
+      padding: 20px;
+    }
+    textarea, input, button {
+      width: 100%;
+      margin-top: 8px;
+      background: #1e1e1e;
+      color: #eaeaea;
+      border: 1px solid #333;
+      padding: 6px;
+    }
+    button {
+      cursor: pointer;
+    }
+    pre {
+      background: #111;
+      padding: 10px;
+      border: 1px solid #333;
+      overflow-x: auto;
+    }
+    .section {
+      margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Multi-Agent Decision System – WebSocket Test</h1>
+
+<div class="section">
+  <h3>Decision Input</h3>
+  <label>Decision Question</label>
+  <input id="decisionQuestion" value="Should we use batch or online inference?" />
+
+  <label>Constraints (JSON)</label>
+  <textarea id="constraints" rows="4">
+{
+  "latency_sensitivity": "medium",
+  "team_size": "small",
+  "risk_tolerance": "medium"
+}
+  </textarea>
+
+  <button onclick="startRun()">Start Run</button>
+</div>
+
+<div class="section">
+  <h3>Planner Slice Edit</h3>
+  <label>Slice Name (systems | ml_ai | cost | product)</label>
+  <input id="sliceName" value="systems" />
+
+  <label>Patch JSON</label>
+  <textarea id="slicePatch" rows="5">
+{
+  "question": "EDITED: What infra constraints dominate?",
+  "key_unknowns": ["edited unknown 1", "edited unknown 2"]
+}
+  </textarea>
+
+  <button onclick="editPlanner()">Edit Planner Slice</button>
+  <button onclick="approvePlanner()">Approve Planner</button>
+</div>
+
+<div class="section">
+  <h3>Event Log</h3>
+  <pre id="log"></pre>
+</div>
+
+<script>
+  let ws;
+  const logEl = document.getElementById("log");
+
+  function log(message) {
+    logEl.textContent += message + "\n\n";
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function startRun() {
+    logEl.textContent = "";
+
+    ws = new WebSocket("ws://localhost:8000/ws/decision");
+
+    ws.onopen = () => {
+      log("✅ WebSocket connected");
+
+      const payload = {
+        type: "start",
+        decision_question: document.getElementById("decisionQuestion").value,
+        constraints: JSON.parse(document.getElementById("constraints").value)
+      };
+
+      log("➡️ SEND start:\n" + JSON.stringify(payload, null, 2));
+      ws.send(JSON.stringify(payload));
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      log("⬅️ EVENT:\n" + JSON.stringify(data, null, 2));
+    };
+
+    ws.onerror = (err) => {
+      log("❌ WebSocket error");
+      console.error(err);
+    };
+
+    ws.onclose = () => {
+      log("🔌 WebSocket closed");
+    };
+  }
+
+  function editPlanner() {
+    if (!ws) return;
+
+    const payload = {
+      type: "edit_planner_slice",
+      slice_name: document.getElementById("sliceName").value,
+      patch: JSON.parse(document.getElementById("slicePatch").value)
+    };
+
+    log("➡️ SEND edit_planner_slice:\n" + JSON.stringify(payload, null, 2));
+    ws.send(JSON.stringify(payload));
+  }
+
+  function approvePlanner() {
+    if (!ws) return;
+
+    const payload = { type: "approve_planner" };
+    log("➡️ SEND approve_planner");
+    ws.send(JSON.stringify(payload));
+  }
+</script>
+
+</body>
+</html>
