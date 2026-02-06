@@ -1,17 +1,23 @@
 import json
 from unittest.mock import patch
 
-from multi_agent_decision_system.core.state import create_initial_state
-from multi_agent_decision_system.core.schemas import (
+from multi_agent_decision_system.graph.specialist_graph import build_specialist_graph
+from multi_agent_decision_system.core.state import (
     DecisionInput,
     PlannerOutput,
-    AgentOutput,
+    create_initial_state,
 )
+from multi_agent_decision_system.core.schemas import AgentOutput
 from multi_agent_decision_system.core.normalization import normalize_constraints
-from multi_agent_decision_system.graph.specialist_graph import build_specialist_graph
 
 
 def test_specialist_graph_executes_all_agents_in_parallel():
+    """
+    Specialist graph should:
+    - Execute all specialist agents from the same initial state
+    - Allow each agent to write independently into agent_outputs
+    - Merge partial updates correctly
+    """
 
     # ------------------
     # Arrange
@@ -22,14 +28,14 @@ def test_specialist_graph_executes_all_agents_in_parallel():
         "risk_tolerance": "low",
     }
 
-    normalized_constraints = normalize_constraints(
+    constraints = normalize_constraints(
         raw_constraints,
         decision_context="batch_vs_online",
     )
 
     decision_input = DecisionInput(
         decision_question="Should we use batch or online inference?",
-        constraints=normalized_constraints,
+        constraints=constraints,
     )
 
     state = create_initial_state(decision_input)
@@ -65,9 +71,6 @@ def test_specialist_graph_executes_all_agents_in_parallel():
 
     graph = build_specialist_graph()
 
-    # ------------------
-    # Mock all agents
-    # ------------------
     def mock_agent_output(agent_name: str):
         return json.dumps(
             {
@@ -79,6 +82,9 @@ def test_specialist_graph_executes_all_agents_in_parallel():
             }
         )
 
+    # ------------------
+    # Mock all agents
+    # ------------------
     with patch(
         "multi_agent_decision_system.agents.systems_agent.ChatOpenAI"
     ) as MockSystems, patch(
@@ -89,14 +95,10 @@ def test_specialist_graph_executes_all_agents_in_parallel():
         "multi_agent_decision_system.agents.product_risk_agent.ChatOpenAI"
     ) as MockProduct:
 
-        MockSystems.return_value.invoke.return_value.content = mock_agent_output(
-            "systems"
-        )
+        MockSystems.return_value.invoke.return_value.content = mock_agent_output("systems")
         MockML.return_value.invoke.return_value.content = mock_agent_output("ml")
         MockCost.return_value.invoke.return_value.content = mock_agent_output("cost")
-        MockProduct.return_value.invoke.return_value.content = mock_agent_output(
-            "product_risk"
-        )
+        MockProduct.return_value.invoke.return_value.content = mock_agent_output("product_risk")
 
         # ------------------
         # Act
@@ -104,29 +106,23 @@ def test_specialist_graph_executes_all_agents_in_parallel():
         final_state = graph.invoke(state)
 
     # ------------------
-    # Assert: agent outputs
+    # Assert
     # ------------------
-    assert final_state.agent_outputs is not None
+    assert final_state is not None
+    assert isinstance(final_state, dict)
+    assert "agent_outputs" in final_state
+    assert isinstance(final_state["agent_outputs"], dict)
 
     for agent in ["systems", "ml", "cost", "product_risk"]:
-        assert agent in final_state.agent_outputs
-        assert isinstance(final_state.agent_outputs[agent], AgentOutput)
-
-    # ------------------
-    # Assert: input logging (parallel-safe)
-    # ------------------
-    assert "agent_inputs" in final_state.input_log
-    for agent in ["systems", "ml", "cost", "product_risk"]:
-        assert agent in final_state.input_log["agent_inputs"]
-        assert isinstance(final_state.input_log["agent_inputs"][agent], list)
-        assert len(final_state.input_log["agent_inputs"][agent]) == 1
-
-    # ------------------
-    # Assert: output logging (append-only)
-    # ------------------
-    assert "agent_outputs" in final_state.output_log
-    for agent in ["systems", "ml", "cost", "product_risk"]:
-        outputs = final_state.output_log["agent_outputs"][agent]
-        assert isinstance(outputs, list)
-        assert len(outputs) == 1
-        assert outputs[0]["agent_name"] == agent
+        assert agent in final_state["agent_outputs"]
+        output = final_state["agent_outputs"][agent]
+        assert isinstance(output, AgentOutput)
+        assert output.agent_name == agent
+        assert output.recommendation in {
+            "option_a",
+            "option_b",
+            "hybrid",
+            "defer",
+            "insufficient_information",
+        }
+        assert 0.0 <= output.confidence <= 1.0

@@ -2,6 +2,7 @@ from typing import Dict, Optional, Annotated
 from pydantic import BaseModel, Field
 from uuid import uuid4
 from datetime import datetime
+import operator
 
 from multi_agent_decision_system.core.schemas import (
     DecisionInput,
@@ -37,7 +38,10 @@ class DecisionState(BaseModel):
     # SPECIALIST AGENT OUTPUTS
     # (Overwritten per iteration)
     # -----------------
-    agent_outputs: Dict[str, AgentOutput] = Field(default_factory=dict)
+    agent_outputs: Annotated[
+        Dict[str, AgentOutput],
+        operator.or_
+    ] = Field(default_factory=dict)
 
     # -----------------
     # DISAGREEMENTS
