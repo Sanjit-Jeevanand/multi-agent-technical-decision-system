@@ -85,7 +85,8 @@ def test_product_risk_agent_logs_input_and_output_correctly():
             mock_product_risk_response
         )
 
-        updated_state = run_product_risk_agent(state)
+        updates = run_product_risk_agent(state)
+        updated_state = state.model_copy(update=updates)
 
     # ------------------
     # Assert
@@ -116,6 +117,6 @@ def test_product_risk_agent_logs_input_and_output_correctly():
     assert "iteration" in input_log
 
     # Output logging exists
-    assert "product_risk" in updated_state.output_log.agent_outputs
-    logged_output = updated_state.output_log.agent_outputs["product_risk"]
-    assert logged_output["agent_name"] == "product_risk"
+    logged_outputs = updated_state.output_log.agent_outputs["product_risk"]
+    assert isinstance(logged_outputs, list)
+    assert logged_outputs[-1]["agent_name"] == "product_risk"
