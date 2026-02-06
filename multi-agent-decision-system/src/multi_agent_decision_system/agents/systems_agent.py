@@ -90,6 +90,9 @@ Decision question:
 Constraints:
 {constraints}
 
+Options:
+{options}
+
 Planner context (systems):
 {planner_slice}
 
@@ -109,6 +112,10 @@ def run_systems_agent(state: DecisionState) -> dict:
 
     planner = state.current.planner
 
+    options = state.input.options
+    if hasattr(options, "model_dump"):
+        options = options.model_dump()
+
     planner_slice = (
         planner.systems.model_dump()
         if planner and planner.systems
@@ -119,7 +126,12 @@ def run_systems_agent(state: DecisionState) -> dict:
 
     messages = SYSTEMS_AGENT_PROMPT.format_messages(
         decision_question=state.input.decision_question,
-        constraints=state.input.constraints,
+        constraints=(
+            state.input.constraints.model_dump()
+            if hasattr(state.input.constraints, "model_dump")
+            else state.input.constraints
+        ),
+        options=options,
         planner_slice=planner_slice or {},
         assumptions=assumptions,
     )

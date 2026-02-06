@@ -90,6 +90,9 @@ Output Format (STRICT)
 Decision question:
 {decision_question}
 
+Options:
+{options}
+
 Constraints:
 {constraints}
 
@@ -120,9 +123,18 @@ def run_ml_ai_agent(state: DecisionState) -> dict:
 
     assumptions = planner.assumptions if planner else []
 
+    # Serialize constraints if they are Pydantic models
+    options = state.input.options
+
+    constraints = state.input.constraints
+    if hasattr(constraints, "model_dump"):
+        constraints = constraints.model_dump()
+
+
     messages = ML_AI_AGENT_PROMPT.format_messages(
         decision_question=state.input.decision_question,
-        constraints=state.input.constraints,
+        options=options,
+        constraints=constraints or {},
         planner_slice=planner_slice or {},
         assumptions=assumptions,
     )

@@ -35,6 +35,13 @@ Hard constraints:
 - Do NOT compare options.
 - Do NOT mention which option is better.
 
+Decision framing:
+- The decision compares exactly two predefined options.
+- These options are provided as `option_a` and `option_b`.
+- Treat these labels as canonical and immutable.
+- Do NOT infer options from the decision question.
+- Do NOT introduce additional options.
+
 For each included perspective, produce:
 - question
 - why_it_matters
@@ -80,8 +87,7 @@ Output format (STRICT):
   }},
 
   "assumptions": ["..."],
-  "clarifying_questions": ["..."],
-
+  "clarifying_questions": ["..."]
 }}
 """
         ),
@@ -90,6 +96,9 @@ Output format (STRICT):
             """
 Decision question:
 {decision_question}
+
+Options:
+{options}
 
 Constraints:
 {constraints}
@@ -109,9 +118,18 @@ def run_planner_agent(state: DecisionState) -> dict:
 
     client = OpenAI()
 
+    options = state.input.options
+    if hasattr(options, "model_dump"):
+        options = options.model_dump()
+
+    constraints = state.input.constraints
+    if hasattr(constraints, "model_dump"):
+        constraints = constraints.model_dump()
+
     messages = PLANNER_PROMPT.format_messages(
         decision_question=state.input.decision_question,
-        constraints=state.input.constraints.model_dump(),
+        options=options,
+        constraints=constraints,
     )
 
     response = client.responses.create(

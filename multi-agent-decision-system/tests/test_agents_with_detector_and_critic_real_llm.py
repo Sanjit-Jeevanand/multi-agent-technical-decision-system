@@ -8,6 +8,8 @@ from multi_agent_decision_system.core.state import (
 from multi_agent_decision_system.core.schema import (
     PlannerOutput,
     SpecialistOutput,
+    DetectorOutput,
+    CriticOutput,
     Recommendation,
 )
 
@@ -16,6 +18,8 @@ from multi_agent_decision_system.agents.systems_agent import run_systems_agent
 from multi_agent_decision_system.agents.ml_ai_agent import run_ml_ai_agent
 from multi_agent_decision_system.agents.cost_agent import run_cost_agent
 from multi_agent_decision_system.agents.product_agent import run_product_agent
+from multi_agent_decision_system.agents.detector_agent import run_detector_agent
+from multi_agent_decision_system.agents.critic_agent import run_critic_agent
 
 
 # =============================================================================
@@ -76,11 +80,7 @@ def print_specialist_input(agent_name: str, state, planner: PlannerOutput):
     parsed_input = {
         "decision_question": state.input.decision_question,
         "options": state.input.options,
-        "constraints": (
-            state.input.constraints.model_dump()
-            if hasattr(state.input.constraints, "model_dump")
-            else state.input.constraints
-        ),
+        "constraints": state.input.constraints.model_dump(),
         "planner_slice": (
             getattr(planner, agent_name).model_dump()
             if getattr(planner, agent_name, None)
@@ -135,6 +135,40 @@ def assert_specialist_output(output: SpecialistOutput, agent_name: str):
     assert 2 <= len(output.risks) <= 4
 
 
+def assert_detector_output(output: DetectorOutput):
+    assert isinstance(output, DetectorOutput)
+    assert output.agent_name == "detector"
+    assert isinstance(output.conflicts, list)
+
+    for conflict in output.conflicts:
+        assert len(conflict.agents_involved) >= 2
+        assert conflict.severity in {"low", "medium", "high"}
+        assert conflict.description.strip() != ""
+
+    if output.has_blocking_conflicts:
+        assert any(c.severity == "high" for c in output.conflicts)
+
+
+def assert_critic_output(output: CriticOutput):
+    assert isinstance(output, CriticOutput)
+    assert output.agent_name == "critic"
+    assert isinstance(output.issues, list)
+
+    for issue in output.issues:
+        assert issue.agent in {
+            "systems",
+            "ml_ai",
+            "cost",
+            "product",
+            "detector",
+        }
+        assert issue.impact in {"low", "medium", "high"}
+        assert issue.issue.strip() != ""
+
+    if output.requires_revision:
+        assert any(i.impact == "high" for i in output.issues)
+
+
 # =============================================================================
 # Planner test
 # =============================================================================
@@ -156,56 +190,72 @@ def test_planner_real_llm(planner_output):
 
 
 # =============================================================================
-# Systems Agent
+# Specialist Agents
 # =============================================================================
 
 def test_systems_agent_real_llm(base_state, planner_output):
     print_specialist_input("systems", base_state, planner_output)
 
-    result = run_systems_agent(base_state)
-    output = result["systems"]
+    output = run_systems_agent(base_state)["systems"]
+    base_state.current.systems = output
 
     print_specialist_output("systems", output)
     assert_specialist_output(output, "systems")
 
 
-# =============================================================================
-# ML / AI Agent
-# =============================================================================
-
 def test_ml_ai_agent_real_llm(base_state, planner_output):
     print_specialist_input("ml_ai", base_state, planner_output)
 
-    result = run_ml_ai_agent(base_state)
-    output = result["ml_ai"]
+    output = run_ml_ai_agent(base_state)["ml_ai"]
+    base_state.current.ml_ai = output
 
     print_specialist_output("ml_ai", output)
     assert_specialist_output(output, "ml_ai")
 
 
-# =============================================================================
-# Cost Agent
-# =============================================================================
-
 def test_cost_agent_real_llm(base_state, planner_output):
     print_specialist_input("cost", base_state, planner_output)
 
-    result = run_cost_agent(base_state)
-    output = result["cost"]
+    output = run_cost_agent(base_state)["cost"]
+    base_state.current.cost = output
 
     print_specialist_output("cost", output)
     assert_specialist_output(output, "cost")
 
 
-# =============================================================================
-# Product & Risk Agent
-# =============================================================================
-
 def test_product_agent_real_llm(base_state, planner_output):
     print_specialist_input("product", base_state, planner_output)
 
-    result = run_product_agent(base_state)
-    output = result["product"]
+    output = run_product_agent(base_state)["product"]
+    base_state.current.product = output
 
     print_specialist_output("product", output)
     assert_specialist_output(output, "product")
+
+
+# =============================================================================
+# Detector Agent
+# =============================================================================
+
+def test_detector_agent_real_llm(base_state):
+    output = run_detector_agent(base_state)["detector"]
+    base_state.current.detector = output
+
+    print_section("DETECTOR OUTPUT (PARSED)")
+    pprint(output.model_dump())
+
+    assert_detector_output(output)
+
+
+# =============================================================================
+# Critic Agent
+# =============================================================================
+
+def test_critic_agent_real_llm(base_state):
+    output = run_critic_agent(base_state)["critic"]
+    base_state.current.critic = output
+
+    print_section("CRITIC OUTPUT (PARSED)")
+    pprint(output.model_dump())
+
+    assert_critic_output(output)

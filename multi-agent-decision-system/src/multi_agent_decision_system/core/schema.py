@@ -9,8 +9,8 @@ from pydantic import BaseModel, Field
 # =========================
 
 Recommendation = Literal[
-    "option_a",                  # batch
-    "option_b",                  # online / realtime
+    "option_a",
+    "option_b",
     "hybrid",
     "defer",
     "insufficient_information",
@@ -29,11 +29,23 @@ AgentName = Literal[
 ]
 
 
+class DecisionOptions(BaseModel):
+    option_a: str
+    option_b: str
+
+
 class DecisionConstraints(BaseModel):
     latency_sensitivity: Optional[str] = None
     budget_sensitivity: Optional[str] = None
     team_size: Optional[str] = None
     risk_tolerance: Optional[str] = None
+
+
+# New input model for full decision input
+class DecisionInput(BaseModel):
+    decision_question: str
+    constraints: DecisionConstraints
+    options: DecisionOptions
 
     
 # =========================

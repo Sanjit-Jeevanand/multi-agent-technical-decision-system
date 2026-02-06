@@ -92,6 +92,9 @@ Output Format (STRICT)
 Decision question:
 {decision_question}
 
+Options:
+{options}
+
 Constraints:
 {constraints}
 
@@ -115,16 +118,19 @@ def run_product_agent(state: DecisionState) -> dict:
     planner = state.current.planner
 
     planner_slice = (
-        planner.cost.model_dump()
-        if planner and planner.cost
+        planner.product.model_dump()
+        if planner and planner.product
         else None
     )
 
     assumptions = planner.assumptions if planner else []
 
+    constraints_dump = state.input.constraints.model_dump() if state.input.constraints else {}
+
     messages = PRODUCT_AGENT_PROMPT.format_messages(
         decision_question=state.input.decision_question,
-        constraints=state.input.constraints,
+        options=state.input.options,
+        constraints=constraints_dump,
         planner_slice=planner_slice or {},
         assumptions=assumptions,
     )

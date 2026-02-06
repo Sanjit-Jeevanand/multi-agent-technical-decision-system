@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional
+from typing import List, Optional
 from pydantic import BaseModel, Field
 from uuid import uuid4
 import time
@@ -10,6 +10,7 @@ import time
 from multi_agent_decision_system.core.schema import (
     AgentName,
     DecisionConstraints,
+    DecisionOptions,
     PlannerOutput,
     SpecialistOutput,
     DetectorOutput,
@@ -25,6 +26,7 @@ from multi_agent_decision_system.core.schema import (
 
 class DecisionInput(BaseModel):
     decision_question: str
+    options: DecisionOptions
     constraints: DecisionConstraints
 
 
@@ -96,7 +98,8 @@ class DecisionState(BaseModel):
 
 def create_initial_state(
     decision_question: str,
-    constraints: DecisionConstraints | Dict,
+    options: DecisionOptions | dict,
+    constraints: DecisionConstraints | dict,
     max_iterations: int = 3,
 ) -> DecisionState:
     """
@@ -110,11 +113,18 @@ def create_initial_state(
         else DecisionConstraints(**constraints)
     )
 
+    normalized_options = (
+        options
+        if isinstance(options, DecisionOptions)
+        else DecisionOptions(**options)
+    )
+
     metadata = RunMetadata(max_iterations=max_iterations)
 
     return DecisionState(
         input=DecisionInput(
             decision_question=decision_question,
+            options=normalized_options,
             constraints=normalized_constraints,
         ),
         metadata=metadata,
