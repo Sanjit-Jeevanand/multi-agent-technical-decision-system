@@ -108,8 +108,11 @@ def test_product_risk_agent_logs_input_and_output_correctly():
     assert 0.0 <= output.confidence <= 1.0
 
     # Input logging exists
-    assert "product_risk" in updated_state.input_log.agent_inputs
-    input_log = updated_state.input_log.agent_inputs["product_risk"]
+    assert "product_risk" in updated_state.input_log["agent_inputs"]
+    input_logs = updated_state.input_log["agent_inputs"]["product_risk"]
+    assert isinstance(input_logs, list)
+    input_log = input_logs[-1]
+
     assert input_log["agent_name"] == "product_risk"
     assert "decision_question" in input_log
     assert "constraints" in input_log
@@ -117,6 +120,6 @@ def test_product_risk_agent_logs_input_and_output_correctly():
     assert "iteration" in input_log
 
     # Output logging exists
-    logged_outputs = updated_state.output_log.agent_outputs["product_risk"]
+    logged_outputs = updated_state.output_log["agent_outputs"]["product_risk"]
     assert isinstance(logged_outputs, list)
     assert logged_outputs[-1]["agent_name"] == "product_risk"

@@ -141,17 +141,28 @@ def run_cost_agent(state: DecisionState) -> dict:
 
     # ---- Return PARTIAL update only ----
     return {
-        "agent_outputs": {
-            "cost": agent_output,
-        },
-        "input_log": {
-            "agent_inputs": {
-                "cost": [agent_input],
-            }
-        },
-        "output_log": {
             "agent_outputs": {
-                "cost": [agent_output.model_dump()],
-            }
-        },
-    }
+                "cost": agent_output
+            },
+            "input_log": {
+                "agent_inputs": {
+                    "cost": [
+                        {
+                            "agent_name": "cost",
+                            "decision_question": state.input.decision_question,
+                            "constraints": state.input.constraints,
+                            "planner_slice": planner_slice,
+                            "assumptions": state.plan.assumptions if state.plan else [],
+                            "iteration": iteration,
+                        }
+                    ]
+                }
+            },
+            "output_log": {
+                "agent_outputs": {
+                    "cost": [
+                        agent_output.model_dump()
+                    ]
+                }
+            },
+        }

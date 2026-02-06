@@ -80,7 +80,9 @@ def test_cost_agent_logs_input_and_output_correctly():
     # ------------------
     assert "cost" in updated_state.input_log["agent_inputs"]
 
-    agent_input = updated_state.input_log["agent_inputs"]["cost"]
+    agent_inputs = updated_state.input_log["agent_inputs"]["cost"]
+    assert isinstance(agent_inputs, list)
+    agent_input = agent_inputs[-1]
     assert agent_input["agent_name"] == "cost"
     assert agent_input["decision_question"] == decision_input.decision_question
     assert agent_input["planner_slice"] is not None

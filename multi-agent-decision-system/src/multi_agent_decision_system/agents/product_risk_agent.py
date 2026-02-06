@@ -143,16 +143,27 @@ def run_product_risk_agent(state: DecisionState) -> dict:
 
     return {
         "agent_outputs": {
-            "product_risk": agent_output,
+            "product_risk": agent_output
         },
         "input_log": {
             "agent_inputs": {
-                "product_risk": [agent_input],
+                "product_risk": [
+                    {
+                        "agent_name": "product_risk",
+                        "decision_question": state.input.decision_question,
+                        "constraints": state.input.constraints,
+                        "planner_slice": planner_slice,
+                        "assumptions": state.plan.assumptions if state.plan else [],
+                        "iteration": iteration,
+                    }
+                ]
             }
         },
         "output_log": {
             "agent_outputs": {
-                "product_risk": [agent_output.model_dump()],
+                "product_risk": [
+                    agent_output.model_dump()
+                ]
             }
         },
     }

@@ -130,13 +130,28 @@ def run_ml_agent(state: DecisionState) -> dict:
 
     # ---- Partial update and append-only logging ----
     return {
-        "agent_outputs": {"ml": agent_output},
+        "agent_outputs": {
+            "ml": agent_output
+        },
         "input_log": {
-            "agent_inputs": input_log_update
+            "agent_inputs": {
+                "ml": [
+                    {
+                        "agent_name": "ml",
+                        "decision_question": state.input.decision_question,
+                        "constraints": state.input.constraints,
+                        "planner_slice": planner_slice,
+                        "assumptions": state.plan.assumptions if state.plan else [],
+                        "iteration": iteration,
+                    }
+                ]
+            }
         },
         "output_log": {
             "agent_outputs": {
-                "ml": [agent_output.model_dump()]
+                "ml": [
+                    agent_output.model_dump()
+                ]
             }
-        }
+        },
     }

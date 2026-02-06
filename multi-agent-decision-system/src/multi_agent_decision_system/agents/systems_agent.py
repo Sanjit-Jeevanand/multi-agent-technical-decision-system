@@ -20,7 +20,7 @@ def run_systems_agent(state: DecisionState) -> dict:
     input_log_update = {
         "agent_name": "systems",
         "decision_question": state.input.decision_question,
-        "constraints": state.input.constraints.model_dump(),
+        "constraints": state.input.constraints,
         "planner_slice": planner_slice,
     }
 
@@ -102,15 +102,28 @@ Planner framing:
         raise RuntimeError(f"Systems agent output invalid: {e}")
 
     return {
-        "agent_outputs": {"systems": output},
+        "agent_outputs": {
+            "systems": output
+        },
         "input_log": {
             "agent_inputs": {
-                "systems": input_log_update
+                "systems": [
+                    {
+                        "agent_name": "systems",
+                        "decision_question": state.input.decision_question,
+                        "constraints": state.input.constraints,
+                        "planner_slice": planner_slice,
+                        "assumptions": state.plan.assumptions if state.plan else [],
+                        "iteration": state.iteration,
+                    }
+                ]
             }
         },
         "output_log": {
             "agent_outputs": {
-                "systems": output.model_dump()
+                "systems": [
+                    output.model_dump()
+                ]
             }
         },
     }
