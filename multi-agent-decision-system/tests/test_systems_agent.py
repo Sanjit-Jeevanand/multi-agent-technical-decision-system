@@ -78,14 +78,15 @@ def test_systems_agent_logs_input_and_output_correctly():
         mock_llm = MockChat.return_value
         mock_llm.invoke.return_value.content = json.dumps(mock_systems_response)
 
-        updated_state = run_systems_agent(state)
+        updates = run_systems_agent(state)
+        updated_state = state.model_copy(update=updates)
 
     # ------------------
     # Assert: input logging
     # ------------------
-    assert "systems" in updated_state.input_log.agent_inputs
+    assert "systems" in updated_state.input_log["agent_inputs"]
 
-    agent_input = updated_state.input_log.agent_inputs["systems"]
+    agent_input = updated_state.input_log["agent_inputs"]["systems"]
     assert agent_input["agent_name"] == "systems"
     assert agent_input["decision_question"] == decision_input.decision_question
     assert agent_input["planner_slice"] is not None
@@ -94,7 +95,7 @@ def test_systems_agent_logs_input_and_output_correctly():
     # Assert: output logging
     # ------------------
     assert "systems" in updated_state.agent_outputs
-    assert "systems" in updated_state.output_log.agent_outputs
+    assert "systems" in updated_state.output_log["agent_outputs"]
 
     output = updated_state.agent_outputs["systems"]
     assert isinstance(output, AgentOutput)

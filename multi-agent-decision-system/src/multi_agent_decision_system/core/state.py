@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Annotated
 from pydantic import BaseModel, Field
 from uuid import uuid4
 from datetime import datetime
@@ -29,7 +29,7 @@ class DecisionState(BaseModel):
     # -----------------
     # IMMUTABLE INPUT
     # -----------------
-    input: DecisionInput
+    input: Annotated[DecisionInput, "immutable"]
 
     # -----------------
     # INPUT LOGGING

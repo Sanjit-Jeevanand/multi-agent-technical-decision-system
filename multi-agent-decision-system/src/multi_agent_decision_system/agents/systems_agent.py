@@ -9,17 +9,15 @@ from multi_agent_decision_system.core.state import DecisionState, initialize_ite
 SYSTEMS_MODEL = "gpt-5-mini"
 
 
-def run_systems_agent(state: DecisionState) -> DecisionState:
+def run_systems_agent(state: DecisionState) -> dict:
 
     state = initialize_iteration_log(state)
 
-    # Log Systems Agent input
-    if not hasattr(state.input_log, "agent_inputs"):
-        state.input_log.agent_inputs = {}
+    # Build Systems Agent input log locally
     planner_slice = None
     if getattr(state, "plan", None) is not None and getattr(state.plan, "systems", None) is not None:
         planner_slice = state.plan.systems.model_dump()
-    state.input_log.agent_inputs["systems"] = {
+    input_log_update = {
         "agent_name": "systems",
         "decision_question": state.input.decision_question,
         "constraints": state.input.constraints.model_dump(),
@@ -103,7 +101,16 @@ Planner framing:
     except ValidationError as e:
         raise RuntimeError(f"Systems agent output invalid: {e}")
 
-    state.agent_outputs["systems"] = output
-    state.output_log.agent_outputs["systems"] = output.model_dump()
-
-    return state
+    return {
+        "agent_outputs": {"systems": output},
+        "input_log": {
+            "agent_inputs": {
+                "systems": input_log_update
+            }
+        },
+        "output_log": {
+            "agent_outputs": {
+                "systems": output.model_dump()
+            }
+        },
+    }
