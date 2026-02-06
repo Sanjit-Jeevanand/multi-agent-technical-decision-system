@@ -1,135 +1,152 @@
-from typing import Dict, Optional, Annotated
+# src/multi_agent_decision_system/core/state.py
+
+from __future__ import annotations
+
+from typing import Dict, List, Optional
 from pydantic import BaseModel, Field
 from uuid import uuid4
-from datetime import datetime
-import operator
+import time
 
-from multi_agent_decision_system.core.schemas import (
-    DecisionInput,
+from multi_agent_decision_system.core.schema import (
+    AgentName,
+    DecisionConstraints,
     PlannerOutput,
-    AgentOutput,
-    Disagreement,
-    CriticFeedback,
-    SynthesisOutput,
-    ConfidenceMetrics,
-    TerminationState,
-    HumanFeedback,
-    ExecutionMetadata,
+    SpecialistOutput,
+    DetectorOutput,
+    CriticOutput,
+    SynthesizerOutput,
+    GateOutput,
 )
 
 
-# =====================================================
-# GLOBAL DECISION STATE
-# =====================================================
+# =========================
+# Decision Input
+# =========================
+
+class DecisionInput(BaseModel):
+    decision_question: str
+    constraints: DecisionConstraints
+
+
+# =========================
+# Run Metadata
+# =========================
+
+class RunMetadata(BaseModel):
+    run_id: str = Field(default_factory=lambda: str(uuid4()))
+    created_at: float = Field(default_factory=lambda: time.time())
+
+    current_iteration: int = 0
+    max_iterations: int = 3
+
+    active_agent: Optional[AgentName] = None
+    terminated: bool = False
+    termination_reason: Optional[str] = None
+
+
+# =========================
+# Iteration State
+# =========================
+
+class IterationState(BaseModel):
+    iteration: int
+
+    # Planner
+    planner: Optional[PlannerOutput] = None
+
+    # Specialist agents
+    systems: Optional[SpecialistOutput] = None
+    ml_ai: Optional[SpecialistOutput] = None
+    cost: Optional[SpecialistOutput] = None
+    product: Optional[SpecialistOutput] = None
+
+    # Reasoning agents
+    detector: Optional[DetectorOutput] = None
+    critic: Optional[CriticOutput] = None
+    synthesizer: Optional[SynthesizerOutput] = None
+    gate: Optional[GateOutput] = None
+
+
+# =========================
+# Global Decision State
+# =========================
 
 class DecisionState(BaseModel):
+    """
+    Single LangGraph state object.
+    Passed between every node.
+    """
 
-    # -----------------
-    # IMMUTABLE INPUT
-    # -----------------
-    input: Annotated[DecisionInput, "immutable"]
+    input: DecisionInput
+    metadata: RunMetadata
 
-    # -----------------
-    # PLANNER OUTPUT
-    # -----------------
-    plan: Optional[PlannerOutput] = None
+    iterations: List[IterationState] = Field(default_factory=list)
 
-    # -----------------
-    # SPECIALIST AGENT OUTPUTS
-    # (Overwritten per iteration)
-    # -----------------
-    agent_outputs: Annotated[
-        Dict[str, AgentOutput],
-        operator.or_
-    ] = Field(default_factory=dict)
+    # Always points to iterations[-1]
+    current: Optional[IterationState] = None
 
-    # -----------------
-    # DISAGREEMENTS
-    # -----------------
-    disagreements: Optional[list[Disagreement]] = None
-
-    # -----------------
-    # CRITIC FEEDBACK
-    # -----------------
-    critic_feedback: Optional[CriticFeedback] = None
-
-    # -----------------
-    # SYNTHESIS RESULT
-    # -----------------
-    synthesis: Optional[SynthesisOutput] = None
-
-    # -----------------
-    # CONFIDENCE METRICS
-    # -----------------
-    confidence: Optional[ConfidenceMetrics] = None
-
-    # -----------------
-    # TERMINATION STATE
-    # -----------------
-    termination: TerminationState
-
-    # -----------------
-    # OPTIONAL HUMAN FEEDBACK
-    # -----------------
-    human_feedback: Optional[HumanFeedback] = None
-
-    # -----------------
-    # EXECUTION METADATA
-    # -----------------
-    metadata: ExecutionMetadata
+    # Terminal outputs
+    final_decision: Optional[SynthesizerOutput] = None
+    approved: bool = False
 
 
-# =====================================================
-# STATE INITIALIZATION
-# =====================================================
+# =========================
+# State Helpers
+# =========================
 
 def create_initial_state(
-    decision_input: DecisionInput,
-    confidence_threshold: float = 0.75,
+    decision_question: str,
+    constraints: DecisionConstraints | Dict,
     max_iterations: int = 3,
 ) -> DecisionState:
+    """
+    Canonical state constructor.
+    Guarantees constraints are always a Pydantic model.
+    """
 
-
-    run_id = str(uuid4())
-    timestamp = datetime.utcnow().isoformat()
-
-    termination_state = TerminationState(
-        confidence_threshold=confidence_threshold,
-        high_severity_risks_remaining=0,
-        iteration_count=0,
-        max_iterations=max_iterations,
-        can_terminate=False,
+    normalized_constraints = (
+        constraints
+        if isinstance(constraints, DecisionConstraints)
+        else DecisionConstraints(**constraints)
     )
 
-    metadata = ExecutionMetadata(
-        run_id=run_id,
-        timestamps={"created_at": timestamp},
-        model_versions={},
-    )
+    metadata = RunMetadata(max_iterations=max_iterations)
 
     return DecisionState(
-        input=decision_input,
-        plan=None,
-        agent_outputs={},
-        disagreements=None,
-        critic_feedback=None,
-        synthesis=None,
-        confidence=None,
-        termination=termination_state,
-        human_feedback=None,
+        input=DecisionInput(
+            decision_question=decision_question,
+            constraints=normalized_constraints,
+        ),
         metadata=metadata,
+        iterations=[],
+        current=None,
     )
 
 
-# =====================================================
-# ITERATION HELPERS
-# =====================================================
+def start_new_iteration(state: DecisionState) -> DecisionState:
+    """
+    Starts a new iteration and sets it as current.
+    """
 
-def increment_iteration(state: DecisionState) -> DecisionState:
-    state.termination.iteration_count += 1
+    iteration = IterationState(
+        iteration=state.metadata.current_iteration
+    )
+
+    state.iterations.append(iteration)
+    state.current = iteration
+
     return state
 
 
-def record_timestamp(state: DecisionState, key: str) -> DecisionState:
-    state.metadata.timestamps[key] = datetime.utcnow().isoformat()
+def advance_iteration(state: DecisionState) -> DecisionState:
+    """
+    Advances iteration counter and enforces termination.
+    """
+
+    state.metadata.current_iteration += 1
+
+    if state.metadata.current_iteration >= state.metadata.max_iterations:
+        state.metadata.terminated = True
+        state.metadata.termination_reason = "max_iterations_reached"
+
     return state

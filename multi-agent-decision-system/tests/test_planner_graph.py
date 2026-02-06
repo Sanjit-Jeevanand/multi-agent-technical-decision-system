@@ -1,7 +1,7 @@
 import json
 from unittest.mock import patch
 
-from multi_agent_decision_system.core.schemas import DecisionInput
+from multi_agent_decision_system.core.schema import DecisionInput
 from multi_agent_decision_system.core.state import DecisionState, create_initial_state
 from multi_agent_decision_system.core.normalization import normalize_constraints
 from multi_agent_decision_system.graph.planner_graph import build_planner_graph

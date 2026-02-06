@@ -1,9 +1,9 @@
 from langgraph.graph import StateGraph
 from multi_agent_decision_system.core.state import DecisionState
 from multi_agent_decision_system.agents.systems_agent import run_systems_agent
-from multi_agent_decision_system.agents.ml_agent import run_ml_agent
+from multi_agent_decision_system.agents.ml_ai_agent import run_ml_agent
 from multi_agent_decision_system.agents.cost_agent import run_cost_agent
-from multi_agent_decision_system.agents.product_risk_agent import run_product_risk_agent
+from multi_agent_decision_system.agents.product_agent import run_product_risk_agent
 
 
 def build_specialist_graph():

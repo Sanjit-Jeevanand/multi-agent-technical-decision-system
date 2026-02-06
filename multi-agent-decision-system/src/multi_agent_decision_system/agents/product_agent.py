@@ -7,43 +7,44 @@ from multi_agent_decision_system.core.schema import SpecialistOutput
 from multi_agent_decision_system.core.state import DecisionState
 
 
-COST_MODEL = "gpt-5-mini"
+PRODUCT_MODEL = "gpt-5-mini"
 
 
-COST_AGENT_PROMPT = ChatPromptTemplate.from_messages(
+PRODUCT_AGENT_PROMPT = ChatPromptTemplate.from_messages(
     [
         (
             "system",
             """
-You are the Cost & Complexity Agent in a multi-agent technical decision system.
+You are the Product & Risk Agent in a multi-agent technical decision system.
 
 Your task:
-Evaluate the decision strictly from a cost, engineering effort, and operational complexity perspective.
+Evaluate the decision strictly from a user impact, safety, and risk perspective.
 
 You assess:
-- Engineering build effort
-- Operational and maintenance overhead
-- On-call and reliability burden
-- Infrastructure complexity
-- Long-term cost of ownership
-- Opportunity cost of engineering time
+- Potential user harm
+- Failure visibility and detectability
+- Trust and reputational risk
+- Regulatory or compliance exposure
+- Rollout and rollback safety
+- Blast radius of failures
+- Reversibility of mistakes
 
 You do NOT:
-- Consider ML quality, latency, or product strategy
+- Optimize for cost, ML quality, or infrastructure
 - Reference other agents
 - Make a final system decision
 
 Biases:
 - Be slightly pessimistic by default.
-- Prefer simpler systems.
-- Long-term operational cost matters more than initial build cost.
-- Hidden complexity is a real cost.
+- User harm matters more than system elegance.
+- Silent or hidden failures are high risk.
+- Reversibility matters more than speed.
 - You may recommend "defer" or "insufficient_information".
 
 Confidence rules:
-- Confidence reflects certainty in cost assessment, not preference.
+- Confidence reflects certainty about user impact, not preference.
 - High confidence (≥ 0.8) should be rare.
-- Online or real-time systems usually cap confidence at ~0.5–0.6.
+- User-facing or automated decisions usually cap confidence at ~0.5–0.6.
 
 Recommendation values (exact):
 - "option_a"
@@ -68,7 +69,7 @@ List constraints:
 Output Format (STRICT)
 ────────────────────────────
 {{
-  "agent_name": "cost",
+  "agent_name": "product",
 
   "recommendation": "<option_a | option_b | hybrid | defer | insufficient_information>",
   "confidence": 0.0,
@@ -94,7 +95,7 @@ Decision question:
 Constraints:
 {constraints}
 
-Planner context (cost):
+Planner context (product):
 {planner_slice}
 
 Assumptions:
@@ -105,9 +106,9 @@ Assumptions:
 )
 
 
-def run_cost_agent(state: DecisionState) -> dict:
+def run_product_agent(state: DecisionState) -> dict:
     """
-    Cost & complexity specialist agent.
+    Product & risk specialist agent.
     Produces SpecialistOutput only.
     """
 
@@ -121,7 +122,7 @@ def run_cost_agent(state: DecisionState) -> dict:
 
     assumptions = planner.assumptions if planner else []
 
-    messages = COST_AGENT_PROMPT.format_messages(
+    messages = PRODUCT_AGENT_PROMPT.format_messages(
         decision_question=state.input.decision_question,
         constraints=state.input.constraints,
         planner_slice=planner_slice or {},
@@ -131,7 +132,7 @@ def run_cost_agent(state: DecisionState) -> dict:
     client = OpenAI()
 
     response = client.responses.create(
-        model=COST_MODEL,
+        model=PRODUCT_MODEL,
         input="\n".join(m.content for m in messages),
         reasoning={"effort": "minimal"},
     )
@@ -141,8 +142,8 @@ def run_cost_agent(state: DecisionState) -> dict:
     try:
         agent_output = SpecialistOutput.model_validate_json(response_text)
     except ValidationError as e:
-        raise RuntimeError(f"Cost Agent output invalid: {e}")
+        raise RuntimeError(f"Product Agent output invalid: {e}")
 
     return {
-        "cost": agent_output
+        "product": agent_output
     }

@@ -1,8 +1,8 @@
 import json
 from unittest.mock import patch
 
-from multi_agent_decision_system.agents.ml_agent import run_ml_agent
-from multi_agent_decision_system.core.schemas import AgentOutput
+from multi_agent_decision_system.agents.ml_ai_agent import run_ml_agent
+from multi_agent_decision_system.core.schema import AgentOutput
 from multi_agent_decision_system.core.state import (
     DecisionInput,
     PlannerOutput,

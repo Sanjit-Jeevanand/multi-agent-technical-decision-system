@@ -7,43 +7,42 @@ from multi_agent_decision_system.core.schema import SpecialistOutput
 from multi_agent_decision_system.core.state import DecisionState
 
 
-COST_MODEL = "gpt-5-mini"
+ML_AI_MODEL = "gpt-5-mini"
 
 
-COST_AGENT_PROMPT = ChatPromptTemplate.from_messages(
+ML_AI_AGENT_PROMPT = ChatPromptTemplate.from_messages(
     [
         (
             "system",
             """
-You are the Cost & Complexity Agent in a multi-agent technical decision system.
+You are the ML / AI Agent in a multi-agent technical decision system.
 
 Your task:
-Evaluate the decision strictly from a cost, engineering effort, and operational complexity perspective.
+Assess the decision strictly from a machine learning and artificial intelligence feasibility and risk perspective.
 
-You assess:
-- Engineering build effort
-- Operational and maintenance overhead
-- On-call and reliability burden
-- Infrastructure complexity
-- Long-term cost of ownership
-- Opportunity cost of engineering time
+You evaluate:
+- Data availability, quality, and representativeness
+- Feature freshness, feasibility, and temporal alignment
+- Training–serving consistency and inference parity
+- Model capability limits and failure modes
+- Distribution shift, drift detection, and monitoring feasibility
+- Evaluation realism and offline–online gap
+- Inference behavior under latency constraints
+- Determinism, reproducibility, and stochasticity risks
 
 You do NOT:
-- Consider ML quality, latency, or product strategy
-- Reference other agents
+- Consider infrastructure design, operational scalability, or cost
+- Consider user experience, business impact, or product strategy
+- Reference other agents or their outputs
 - Make a final system decision
 
-Biases:
+Epistemic rules:
 - Be slightly pessimistic by default.
-- Prefer simpler systems.
-- Long-term operational cost matters more than initial build cost.
-- Hidden complexity is a real cost.
-- You may recommend "defer" or "insufficient_information".
-
-Confidence rules:
-- Confidence reflects certainty in cost assessment, not preference.
-- High confidence (≥ 0.8) should be rare.
-- Online or real-time systems usually cap confidence at ~0.5–0.6.
+- Missing or uncertain information is a material risk.
+- Confidence reflects epistemic certainty, not preference.
+- High confidence (≥ 0.8) should be rare and well-justified.
+- Real-time, online, or adaptive AI systems usually cap confidence at ~0.6–0.7.
+- You may recommend "defer" or "insufficient_information" when key uncertainties remain.
 
 Recommendation values (exact):
 - "option_a"
@@ -68,7 +67,7 @@ List constraints:
 Output Format (STRICT)
 ────────────────────────────
 {{
-  "agent_name": "cost",
+  "agent_name": "ml_ai",
 
   "recommendation": "<option_a | option_b | hybrid | defer | insufficient_information>",
   "confidence": 0.0,
@@ -94,7 +93,7 @@ Decision question:
 Constraints:
 {constraints}
 
-Planner context (cost):
+Planner context (ml_ai):
 {planner_slice}
 
 Assumptions:
@@ -105,23 +104,23 @@ Assumptions:
 )
 
 
-def run_cost_agent(state: DecisionState) -> dict:
+def run_ml_ai_agent(state: DecisionState) -> dict:
     """
-    Cost & complexity specialist agent.
+    ML / AI specialist agent.
     Produces SpecialistOutput only.
     """
 
     planner = state.current.planner
 
     planner_slice = (
-        planner.cost.model_dump()
-        if planner and planner.cost
+        planner.ml_ai.model_dump()
+        if planner and planner.ml_ai
         else None
     )
 
     assumptions = planner.assumptions if planner else []
 
-    messages = COST_AGENT_PROMPT.format_messages(
+    messages = ML_AI_AGENT_PROMPT.format_messages(
         decision_question=state.input.decision_question,
         constraints=state.input.constraints,
         planner_slice=planner_slice or {},
@@ -131,7 +130,7 @@ def run_cost_agent(state: DecisionState) -> dict:
     client = OpenAI()
 
     response = client.responses.create(
-        model=COST_MODEL,
+        model=ML_AI_MODEL,
         input="\n".join(m.content for m in messages),
         reasoning={"effort": "minimal"},
     )
@@ -141,8 +140,8 @@ def run_cost_agent(state: DecisionState) -> dict:
     try:
         agent_output = SpecialistOutput.model_validate_json(response_text)
     except ValidationError as e:
-        raise RuntimeError(f"Cost Agent output invalid: {e}")
+        raise RuntimeError(f"ML/AI Agent output invalid: {e}")
 
     return {
-        "cost": agent_output
+        "ml_ai": agent_output
     }

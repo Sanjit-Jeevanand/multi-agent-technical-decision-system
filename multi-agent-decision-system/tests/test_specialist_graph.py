@@ -7,7 +7,7 @@ from multi_agent_decision_system.core.state import (
     PlannerOutput,
     create_initial_state,
 )
-from multi_agent_decision_system.core.schemas import AgentOutput
+from multi_agent_decision_system.core.schema import AgentOutput
 from multi_agent_decision_system.core.normalization import normalize_constraints
 
 

@@ -1,9 +1,9 @@
 import json
-from pydantic import ValidationError
 from openai import OpenAI
+from pydantic import ValidationError
 from langchain_core.prompts import ChatPromptTemplate
 
-from multi_agent_decision_system.core.schemas import AgentOutput
+from multi_agent_decision_system.core.schema import SpecialistOutput
 from multi_agent_decision_system.core.state import DecisionState
 
 
@@ -36,64 +36,62 @@ Style constraints:
 - Prefer short, declarative statements over descriptive prose.
 
 Confidence calibration rules:
-- Confidence reflects your certainty about systems aspects, not personal preference.
-- High confidence (≥ 0.8) should be rare and reserved for well-understood scenarios.
-- When assumptions about scale or environment are required, cap confidence at approximately 0.6–0.7.
-- Maintain a conservative bias favoring operational simplicity and risk avoidance.
-- It is acceptable to recommend "defer" or "insufficient_information" if confident assessment is not possible.
+- Confidence reflects certainty about systems aspects.
+- High confidence (≥ 0.8) should be rare.
+- If assumptions about scale or environment are required, cap confidence at ~0.6–0.7.
+- Conservative bias is required.
 
 Recommendation label rules:
 - Provide exactly one recommendation.
-- Use canonical labels for recommendations.
-- Avoid ambiguous or multiple recommendations.
-
-Canonical recommendation mapping:
-- Use ONLY these values:
-  - "option_a" = batch inference
-  - "option_b" = online / real-time inference
-  - "hybrid" = mixed or phased approach
-  - "defer" = decision cannot be made safely
-  - "insufficient_information" = critical unknowns block assessment
-
-Do NOT output domain terms like "batch", "online", or "real-time" as the recommendation value.
+- Use ONLY canonical labels:
+  - "option_a"
+  - "option_b"
+  - "hybrid"
+  - "defer"
+  - "insufficient_information"
 
 Output contract:
 - Output MUST be valid JSON.
-- Output MUST conform exactly to the AgentOutput schema.
+- Output MUST conform exactly to the SpecialistOutput schema.
 
-List constraints (IMPORTANT):
-- benefits: 2–4 items maximum
-- risks: 2–4 items maximum
-- Each list item must be a single, atomic sentence
-- Do NOT use semicolons or conjunctions ("and", "or") inside list items
+List constraints:
+- benefits: 2–4 items
+- risks: 2–4 items
+- Each item must be a single atomic sentence.
 
-JSON correctness rules (CRITICAL):
-- Do not include trailing commas.
-- Do not include comments.
-- Do not include extra whitespace outside JSON.
-- Ensure all arrays and objects are properly closed.
-
-Output format:
+────────────────────────────
+Output Format (STRICT)
+────────────────────────────
 {{
   "agent_name": "systems",
-  "recommendation": "...",
-  "confidence": 0.6,
-  "benefits": ["..."],
-  "risks": ["..."]
+
+  "recommendation": "<option_a | option_b | hybrid | defer | insufficient_information>",
+  "confidence": 0.0,
+
+  "benefits": [
+    "...",
+    "..."
+  ],
+
+  "risks": [
+    "...",
+    "..."
+  ]
 }}
+
 """
         ),
         (
             "human",
             """
 Decision question:
-{question}
+{decision_question}
 
 Constraints:
 {constraints}
 
-Planner framing:
-{plan}
+Planner context (systems):
+{planner_slice}
 
 Assumptions:
 {assumptions}
@@ -104,18 +102,26 @@ Assumptions:
 
 
 def run_systems_agent(state: DecisionState) -> dict:
+    """
+    Systems specialist agent.
+    Produces SpecialistOutput only.
+    """
+
+    planner = state.current.planner
 
     planner_slice = (
-        state.plan.systems.model_dump()
-        if state.plan and state.plan.systems
+        planner.systems.model_dump()
+        if planner and planner.systems
         else None
     )
 
+    assumptions = planner.assumptions if planner else []
+
     messages = SYSTEMS_AGENT_PROMPT.format_messages(
-        question=state.input.decision_question,
-        constraints=state.input.constraints.model_dump(),
-        plan=planner_slice or {},
-        assumptions=state.plan.assumptions if state.plan else [],
+        decision_question=state.input.decision_question,
+        constraints=state.input.constraints,
+        planner_slice=planner_slice or {},
+        assumptions=assumptions,
     )
 
     client = OpenAI()
@@ -129,24 +135,10 @@ def run_systems_agent(state: DecisionState) -> dict:
     response_text = response.output_text
 
     try:
-        agent_output = AgentOutput.model_validate_json(response_text)
+        agent_output = SpecialistOutput.model_validate_json(response_text)
     except ValidationError as e:
         raise RuntimeError(f"Systems Agent output invalid: {e}")
 
-    systems_log = {
-        "agent": "systems",
-        "decision_question": state.input.decision_question,
-        "constraints": state.input.constraints.model_dump(),
-        "planner_slice": planner_slice,
-        "assumptions": state.plan.assumptions if state.plan else [],
-        "output": agent_output.model_dump(),
-        "model": SYSTEMS_MODEL,
-    }
-    print(json.dumps(systems_log))
-
-    # 🔹 LangGraph-safe partial update
     return {
-        "agent_outputs": {
-            "systems": agent_output
-        }
+        "systems": agent_output
     }

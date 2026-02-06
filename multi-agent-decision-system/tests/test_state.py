@@ -1,7 +1,7 @@
 import pytest
 
 from multi_agent_decision_system.core.state import create_initial_state
-from multi_agent_decision_system.core.schemas import DecisionInput
+from multi_agent_decision_system.core.schema import DecisionInput
 
 
 def test_state_initializes_correctly():

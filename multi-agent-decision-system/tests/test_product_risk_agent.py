@@ -1,8 +1,8 @@
 import json
 from unittest.mock import patch
 
-from multi_agent_decision_system.agents.product_risk_agent import run_product_risk_agent
-from multi_agent_decision_system.core.schemas import AgentOutput
+from multi_agent_decision_system.agents.product_agent import run_product_risk_agent
+from multi_agent_decision_system.core.schema import AgentOutput
 from multi_agent_decision_system.core.state import (
     DecisionInput,
     PlannerOutput,
