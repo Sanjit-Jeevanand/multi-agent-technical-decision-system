@@ -1,143 +1,587 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Multi-Agent Decision System – Test Console</title>
-  <style>
-    body {
-      font-family: monospace;
-      background: #0f0f0f;
-      color: #eaeaea;
-      padding: 20px;
-    }
-    textarea, input, button {
-      width: 100%;
-      margin-top: 8px;
-      background: #1e1e1e;
-      color: #eaeaea;
-      border: 1px solid #333;
-      padding: 6px;
-    }
-    button {
-      cursor: pointer;
-    }
-    pre {
-      background: #111;
-      padding: 10px;
-      border: 1px solid #333;
-      overflow-x: auto;
-    }
-    .section {
-      margin-bottom: 24px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Agent Decision System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .status.info {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left: 4px solid #1976d2;
+        }
+
+        .status.success {
+            background: #e8f5e9;
+            color: #388e3c;
+            border-left: 4px solid #388e3c;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #c62828;
+        }
+
+        .agent-trace {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .agent-trace h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .agent-trace p {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .cost-summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+
+        .cost-summary h3 {
+            margin-bottom: 10px;
+        }
+
+        .cost-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .cost-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .cost-item label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+
+        .cost-item .value {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .iteration-divider {
+            border-top: 3px dashed #667eea;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .iteration-divider::after {
+            content: "ITERATION 2";
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 0 15px;
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+
+        #results {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        pre {
+            background: #111;
+            color: #eaeaea;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        details summary {
+            cursor: pointer;
+            color: #667eea;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Multi-Agent Decision System</h1>
+            <p>Real-time collaborative decision making with specialist agents</p>
+        </div>
 
-<h1>Multi-Agent Decision System – WebSocket Test</h1>
+        <div class="content">
+            <div id="status" class="status"></div>
 
-<div class="section">
-  <h3>Decision Input</h3>
-  <label>Decision Question</label>
-  <input id="decisionQuestion" value="Should we use batch or online inference?" />
+            <!-- Input Form -->
+            <div class="section">
+                <h2>Decision Input</h2>
+                
+                <div class="form-group">
+                    <label>Decision Question</label>
+                    <input type="text" id="question" value="Should we use batch or online inference?" />
+                </div>
 
-  <label>Constraints (JSON)</label>
-  <textarea id="constraints" rows="4">
-{
-  "latency_sensitivity": "medium",
-  "team_size": "small",
-  "risk_tolerance": "medium"
-}
-  </textarea>
+                <div class="form-group">
+                    <label>Option A</label>
+                    <input type="text" id="optionA" value="batch inference" />
+                </div>
 
-  <button onclick="startRun()">Start Run</button>
-</div>
+                <div class="form-group">
+                    <label>Option B</label>
+                    <input type="text" id="optionB" value="online inference" />
+                </div>
 
-<div class="section">
-  <h3>Planner Slice Edit</h3>
-  <label>Slice Name (systems | ml_ai | cost | product)</label>
-  <input id="sliceName" value="systems" />
+                <div class="form-group">
+                    <label>Latency Sensitivity</label>
+                    <select id="latency">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
 
-  <label>Patch JSON</label>
-  <textarea id="slicePatch" rows="5">
-{
-  "question": "EDITED: What infra constraints dominate?",
-  "key_unknowns": ["edited unknown 1", "edited unknown 2"]
-}
-  </textarea>
+                <div class="form-group">
+                    <label>Team Size</label>
+                    <select id="teamSize">
+                        <option value="small" selected>Small</option>
+                        <option value="medium">Medium</option>
+                        <option value="large">Large</option>
+                    </select>
+                </div>
 
-  <button onclick="editPlanner()">Edit Planner Slice</button>
-  <button onclick="approvePlanner()">Approve Planner</button>
-</div>
+                <div class="form-group">
+                    <label>Risk Tolerance</label>
+                    <select id="riskTolerance">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
 
-<div class="section">
-  <h3>Event Log</h3>
-  <pre id="log"></pre>
-</div>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="startDecision()">
+                        🚀 Start Iteration 1
+                    </button>
+                    <button class="btn-secondary" onclick="clearResults()">
+                        🗑️ Clear Results
+                    </button>
+                </div>
+            </div>
 
-<script>
-  let ws;
-  const logEl = document.getElementById("log");
+            <!-- Results -->
+            <div id="results"></div>
 
-  function log(message) {
-    logEl.textContent += message + "\n\n";
-    logEl.scrollTop = logEl.scrollHeight;
-  }
+            <!-- Iteration 2 Controls -->
+            <div id="iteration2Controls" style="display: none;">
+                <div class="iteration-divider"></div>
+                
+                <div class="section">
+                    <h2>User Feedback for Iteration 2</h2>
 
-  function startRun() {
-    logEl.textContent = "";
+                    <div class="form-group">
+                        <label>Accepted Risks</label>
+                        <textarea id="acceptedRisks" placeholder="Enter accepted risks, one per line">Model performance may degrade between batch runs due to drift.</textarea>
+                    </div>
 
-    ws = new WebSocket("ws://localhost:8000/ws/decision");
+                    <div class="form-group">
+                        <label>Rejected Recommendations</label>
+                        <textarea id="rejectedRecs" placeholder="Enter rejected recommendations, one per line">hybrid</textarea>
+                    </div>
 
-    ws.onopen = () => {
-      log("✅ WebSocket connected");
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="notes" placeholder="Additional context or guidance">We accept staleness risk for v1 and prioritize operational simplicity.</textarea>
+                    </div>
 
-      const payload = {
-        type: "start",
-        decision_question: document.getElementById("decisionQuestion").value,
-        constraints: JSON.parse(document.getElementById("constraints").value)
-      };
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="forceApprove" />
+                        <label for="forceApprove">Force Approve (Override Gate)</label>
+                    </div>
 
-      log("➡️ SEND start:\n" + JSON.stringify(payload, null, 2));
-      ws.send(JSON.stringify(payload));
-    };
+                    <div class="button-group">
+                        <button class="btn-primary" onclick="submitIteration2()">
+                            ⚡ Submit & Run Iteration 2
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      log("⬅️ EVENT:\n" + JSON.stringify(data, null, 2));
-    };
+    <script>
+        let ws = null;
+        let currentState = null;
 
-    ws.onerror = (err) => {
-      log("❌ WebSocket error");
-      console.error(err);
-    };
+        function showStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+        }
 
-    ws.onclose = () => {
-      log("🔌 WebSocket closed");
-    };
-  }
+        function hideStatus() {
+            document.getElementById('status').style.display = 'none';
+        }
 
-  function editPlanner() {
-    if (!ws) return;
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('iteration2Controls').style.display = 'none';
+            hideStatus();
+        }
 
-    const payload = {
-      type: "edit_planner_slice",
-      slice_name: document.getElementById("sliceName").value,
-      patch: JSON.parse(document.getElementById("slicePatch").value)
-    };
+        function appendResult(html) {
+            document.getElementById('results').innerHTML += html;
+            document.getElementById('results').scrollTop = document.getElementById('results').scrollHeight;
+        }
 
-    log("➡️ SEND edit_planner_slice:\n" + JSON.stringify(payload, null, 2));
-    ws.send(JSON.stringify(payload));
-  }
+        function startDecision() {
+            clearResults();
+            showStatus('Connecting to decision system...', 'info');
 
-  function approvePlanner() {
-    if (!ws) return;
+            const wsUrl = `ws://localhost:8000/ws/full-trace`;
+            ws = new WebSocket(wsUrl);
 
-    const payload = { type: "approve_planner" };
-    log("➡️ SEND approve_planner");
-    ws.send(JSON.stringify(payload));
-  }
-</script>
+            ws.onopen = () => {
+                showStatus('Connected! Starting iteration 1...', 'info');
 
+                const payload = {
+                    type: 'start',
+                    decision_question: document.getElementById('question').value,
+                    options: {
+                        option_a: document.getElementById('optionA').value,
+                        option_b: document.getElementById('optionB').value,
+                    },
+                    constraints: {
+                        latency_sensitivity: document.getElementById('latency').value,
+                        team_size: document.getElementById('teamSize').value,
+                        risk_tolerance: document.getElementById('riskTolerance').value,
+                    },
+                    force_approve: false,
+                };
+
+                ws.send(JSON.stringify(payload));
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleMessage(data);
+            };
+
+            ws.onerror = (error) => {
+                showStatus('WebSocket error occurred', 'error');
+                console.error('WebSocket error:', error);
+            };
+
+            ws.onclose = () => {
+                showStatus('Connection closed', 'info');
+            };
+        }
+
+        function handleMessage(data) {
+            if (data.type === 'state_initialized') {
+                currentState = data.state;
+                appendResult(`
+                    <div class="agent-trace">
+                        <h4>✓ State Initialized</h4>
+                        <p><strong>Question:</strong> ${data.state.decision_question}</p>
+                    </div>
+                `);
+            }
+            else if (data.agent) {
+                const output = data.output || {};
+                const inputCtx = data.input_context || {};
+
+                appendResult(`
+                    <div class="agent-trace">
+                        <h4>🤖 ${data.agent.toUpperCase()}</h4>
+
+                        <p><strong>Tokens:</strong> ${data.input_tokens || 0} in, ${data.output_tokens || 0} out</p>
+                        <p><strong>Cost:</strong> $${data.cost_usd || 0}</p>
+
+                        ${output.recommendation ? `<p><strong>Recommendation:</strong> ${output.recommendation}</p>` : ''}
+                        ${output.confidence ? `<p><strong>Confidence:</strong> ${(output.confidence * 100).toFixed(1)}%</p>` : ''}
+
+                        <details style="margin-top:10px;">
+                            <summary><strong>🔍 Input Context</strong></summary>
+                            <pre>${JSON.stringify(inputCtx, null, 2)}</pre>
+                        </details>
+
+                        <details style="margin-top:10px;">
+                            <summary><strong>📤 Full Output</strong></summary>
+                            <pre>${JSON.stringify(output, null, 2)}</pre>
+                        </details>
+                    </div>
+                `);
+            }
+            else if (data.type === 'iteration_complete') {
+                appendResult(`
+                    <div class="cost-summary">
+                        <h3>📊 Iteration ${data.iteration} Complete</h3>
+                        <div class="cost-grid">
+                            <div class="cost-item">
+                                <label>Gate Tier</label>
+                                <div class="value">${data.gate_tier}</div>
+                            </div>
+                            <div class="cost-item">
+                                <label>Approved</label>
+                                <div class="value">${data.approved ? '✓' : '✗'}</div>
+                            </div>
+                            <div class="cost-item">
+                                <label>Total Tokens</label>
+                                <div class="value">${data.total_tokens}</div>
+                            </div>
+                            <div class="cost-item">
+                                <label>Total Cost</label>
+                                <div class="value">$${data.total_cost_usd}</div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+
+                if (!data.approved) {
+                    document.getElementById('iteration2Controls').style.display = 'block';
+                    showStatus('Iteration 1 complete. Provide feedback for iteration 2.', 'success');
+                }
+            }
+            else if (data.type === 'authority_shift') {
+                showStatus(`Authority shifted to ${data.gate_tier} tier`, 'info');
+            }
+            else if (data.type === 'run_complete') {
+                appendResult(`
+                    <div class="cost-summary">
+                        <h3>🎉 Decision Complete</h3>
+                        <div class="cost-grid">
+                            <div class="cost-item">
+                                <label>Final Decision</label>
+                                <div class="value">${data.approved ? 'APPROVED' : 'REJECTED'}</div>
+                            </div>
+                            <div class="cost-item">
+                                <label>Recommendation</label>
+                                <div class="value">${data.final_recommendation || 'N/A'}</div>
+                            </div>
+                            <div class="cost-item">
+                                <label>Total Tokens</label>
+                                <div class="value">${data.total_tokens}</div>
+                            </div>
+                            <div class="cost-item">
+                                <label>Total Cost</label>
+                                <div class="value">$${data.total_cost_usd}</div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                showStatus('Decision process complete!', 'success');
+            }
+            else if (data.type === 'error') {
+                showStatus(`Error: ${data.message}`, 'error');
+            }
+        }
+
+        function submitIteration2() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                showStatus('WebSocket not connected', 'error');
+                return;
+            }
+
+            showStatus('Submitting feedback and running iteration 2...', 'info');
+
+            const acceptedRisks = document.getElementById('acceptedRisks').value
+                .split('\n')
+                .filter(r => r.trim());
+
+            const rejectedRecs = document.getElementById('rejectedRecs').value
+                .split('\n')
+                .filter(r => r.trim());
+
+            const payload = {
+                type: 'user_delta',
+                accepted_risks: acceptedRisks,
+                rejected_recommendations: rejectedRecs,
+                notes: document.getElementById('notes').value,
+                force_approve: document.getElementById('forceApprove').checked,
+            };
+
+            ws.send(JSON.stringify(payload));
+            document.getElementById('iteration2Controls').style.display = 'none';
+        }
+    </script>
 </body>
 </html>
