@@ -3,574 +3,1311 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Agent Decision System</title>
+    <title>Multi-Agent Technical Decision System — Live Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;450;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        slate: {
+                            950: '#020617',
+                            900: '#0f172a',
+                            850: '#0b1221',
+                            800: '#1e293b',
+                            750: '#162032',
+                            700: '#334155',
+                        },
+                        violet: {
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                        },
+                        amber: {
+                            450: '#f59e0b',
+                        },
+                        emerald: {
+                            450: '#10b981',
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in': 'fadeIn 0.4s ease-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(8px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 5px rgba(139, 92, 246, 0.2)' },
+                            '100%': { boxShadow: '0 0 20px rgba(139, 92, 246, 0.4)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            background-color: #020617;
+            color: #e2e8f0;
+            font-feature-settings: "cv02", "cv03", "cv04", "cv11";
         }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
+        
+        .panel {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(51, 65, 85, 0.4);
+            backdrop-filter: blur(12px);
         }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
+        
+        .panel-elevated {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(139, 92, 246, 0.15);
+            box-shadow: 0 0 40px -10px rgba(139, 92, 246, 0.1);
         }
-
-        .header h1 {
-            font-size: 2rem;
-            margin-bottom: 10px;
+        
+        .agent-node {
+            transition: all 0.3s ease;
         }
-
-        .header p {
-            opacity: 0.9;
-            font-size: 1rem;
-        }
-
-        .content {
-            padding: 30px;
-        }
-
-        .section {
-            margin-bottom: 30px;
-        }
-
-        .section h2 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 8px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            color: #555;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        input[type="text"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-
-        input[type="text"]:focus,
-        textarea:focus,
-        select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        button {
-            flex: 1;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
+        
+        .agent-node:hover {
+            border-color: rgba(139, 92, 246, 0.4);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
-
-        .btn-secondary {
-            background: #f5f5f5;
-            color: #333;
+        
+        .agent-node.active {
+            border-color: rgba(139, 92, 246, 0.6);
+            background: rgba(139, 92, 246, 0.1);
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.2);
         }
-
-        .btn-secondary:hover {
-            background: #e0e0e0;
+        
+        .agent-node.running {
+            animation: glow 2s ease-in-out infinite alternate;
         }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none !important;
+        
+        .agent-node.completed {
+            border-color: rgba(16, 185, 129, 0.4);
+            background: rgba(16, 185, 129, 0.05);
         }
-
-        .status {
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            display: none;
+        
+        .agent-node.error {
+            border-color: rgba(239, 68, 68, 0.4);
+            background: rgba(239, 68, 68, 0.05);
         }
-
-        .status.info {
-            background: #e3f2fd;
-            color: #1976d2;
-            border-left: 4px solid #1976d2;
+        
+        .disagreement-card {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0.02) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.2);
         }
-
-        .status.success {
-            background: #e8f5e9;
-            color: #388e3c;
-            border-left: 4px solid #388e3c;
+        
+        .synthesis-card {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(139, 92, 246, 0.02) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.2);
         }
-
-        .status.error {
-            background: #ffebee;
-            color: #c62828;
-            border-left: 4px solid #c62828;
+        
+        .critic-card {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.03) 0%, rgba(239, 68, 68, 0.01) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.15);
         }
-
-        .agent-trace {
-            background: #f9f9f9;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 10px;
+        
+        .iteration-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0.02) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.2);
         }
-
-        .agent-trace h4 {
-            color: #667eea;
-            margin-bottom: 8px;
-            font-size: 1rem;
-        }
-
-        .agent-trace p {
-            color: #666;
-            font-size: 0.9rem;
+        
+        .decision-trace {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
             line-height: 1.6;
         }
-
-        .cost-summary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 6px;
-            margin-top: 20px;
-        }
-
-        .cost-summary h3 {
-            margin-bottom: 10px;
-        }
-
-        .cost-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .cost-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px;
-            border-radius: 4px;
-        }
-
-        .cost-item label {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.85rem;
-            margin-bottom: 5px;
-        }
-
-        .cost-item .value {
-            font-size: 1.3rem;
-            font-weight: 700;
-        }
-
-        .iteration-divider {
-            border-top: 3px dashed #667eea;
-            margin: 30px 0;
+        
+        .confidence-bar {
+            background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #10b981 100%);
+            height: 4px;
+            border-radius: 2px;
             position: relative;
         }
-
-        .iteration-divider::after {
-            content: "ITERATION 2";
+        
+        .confidence-marker {
             position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: -4px;
+            width: 12px;
+            height: 12px;
             background: white;
-            padding: 0 15px;
-            color: #667eea;
-            font-weight: 700;
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            width: auto;
-            margin-right: 10px;
-        }
-
-        #results {
-            max-height: 600px;
-            overflow-y: auto;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
+            border: 2px solid #8b5cf6;
             border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
+            transform: translateX(-50%);
+            transition: left 0.5s ease;
         }
-
-        pre {
-            background: #111;
-            color: #eaeaea;
-            padding: 12px;
-            border-radius: 6px;
-            overflow-x: auto;
-            font-size: 12px;
-            margin-top: 8px;
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
-        details summary {
-            cursor: pointer;
-            color: #667eea;
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
         }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        
+        .expandable-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        
+        .expandable-content.expanded {
+            max-height: 500px;
+        }
+        
+        .code-ref {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: #64748b;
+            transition: color 0.2s;
+        }
+        
+        .code-ref:hover {
+            color: #a78bfa;
+        }
+        
+        .status-connected {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10b981;
+        }
+        
+        .status-connecting {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #f59e0b;
+        }
+        
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+        
+        .cost-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            color: #a78bfa;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .token-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            padding: 2px 6px;
+            border-radius: 4px;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🤖 Multi-Agent Decision System</h1>
-            <p>Real-time collaborative decision making with specialist agents</p>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 border-b border-slate-800/50 bg-slate-950/90 backdrop-blur-xl">
+        <div class="max-w-[1600px] mx-auto px-6 h-14 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded bg-violet-600 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                </div>
+                <div>
+                    <div class="font-mono text-xs font-semibold text-slate-200 tracking-wider">MULTI-AGENT SYSTEM</div>
+                    <div class="text-[10px] text-slate-500 font-mono">Technical Decision Demo</div>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div id="connectionStatus" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-700">
+                    <span id="statusDot" class="w-2 h-2 rounded-full bg-slate-600"></span>
+                    <span id="statusText" class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Disconnected</span>
+                </div>
+                <a href="#" class="text-[11px] text-slate-500 hover:text-violet-400 transition-colors font-mono">Architecture</a>
+            </div>
         </div>
+    </nav>
 
-        <div class="content">
-            <div id="status" class="status"></div>
-
-            <!-- Input Form -->
-            <div class="section">
-                <h2>Decision Input</h2>
-                
-                <div class="form-group">
-                    <label>Decision Question</label>
-                    <input type="text" id="question" value="Should we use batch or online inference?" />
+    <!-- Main Content -->
+    <main class="flex-1 pt-14">
+        
+        <!-- Decision Prompt Section -->
+        <section class="border-b border-slate-800/50 bg-slate-950/30">
+            <div class="max-w-[1400px] mx-auto px-6 py-8">
+                <div class="text-center mb-6">
+                    <h1 class="text-2xl font-semibold text-slate-100 mb-2">Submit Technical Decision</h1>
+                    <p class="text-sm text-slate-500">Multiple agents will reason independently and disagree constructively</p>
                 </div>
 
-                <div class="form-group">
-                    <label>Option A</label>
-                    <input type="text" id="optionA" value="batch inference" />
+                <!-- Decision Input -->
+                <div class="max-w-3xl mx-auto">
+                    <div class="relative mb-4">
+                        <textarea 
+                            id="decisionInput"
+                            class="w-full bg-slate-950/60 border border-slate-700/50 rounded-xl p-5 pr-16 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30 transition-all resize-none text-base leading-relaxed min-h-[120px]"
+                            placeholder="What technical decision would you like the system to analyze?"
+                        ></textarea>
+                        <button id="runBtn" onclick="startDecision()" class="absolute bottom-4 right-4 px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium rounded-lg transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                            <span id="runBtnText">Start Iteration 1</span>
+                        </button>
+                    </div>
+
+                    <!-- Example Prompts -->
+                    <div class="flex flex-wrap justify-center gap-2 mb-6">
+                        <button onclick="setPrompt('Should we use online or batch inference for this ML system?')" class="px-3 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-[11px] text-slate-400 hover:text-slate-200 hover:border-violet-500/30 transition-all">
+                            Online vs batch inference
+                        </button>
+                        <button onclick="setPrompt('Is LangGraph justified over custom orchestration here?')" class="px-3 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-[11px] text-slate-400 hover:text-slate-200 hover:border-violet-500/30 transition-all">
+                            LangGraph vs custom
+                        </button>
+                        <button onclick="setPrompt('Should we deploy this feature behind a feature flag?')" class="px-3 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-[11px] text-slate-400 hover:text-slate-200 hover:border-violet-500/30 transition-all">
+                            Feature flag decision
+                        </button>
+                    </div>
+
+                    <!-- Options & Constraints -->
+                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="text-[10px] font-mono text-slate-500 uppercase mb-2 block">Option A</label>
+                            <input type="text" id="optionA" value="batch inference" class="w-full bg-slate-950/60 border border-slate-700/50 rounded-lg px-4 py-2 text-sm text-slate-300 focus:outline-none focus:border-violet-500/50" />
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-mono text-slate-500 uppercase mb-2 block">Option B</label>
+                            <input type="text" id="optionB" value="online inference" class="w-full bg-slate-950/60 border border-slate-700/50 rounded-lg px-4 py-2 text-sm text-slate-300 focus:outline-none focus:border-violet-500/50" />
+                        </div>
+                    </div>
+
+                    <!-- Constraints -->
+                    <div class="flex flex-wrap justify-center gap-4 text-[11px] text-slate-500">
+                        <label class="flex items-center gap-2 cursor-pointer hover:text-slate-400">
+                            <input type="checkbox" id="latencyLow" class="rounded border-slate-700 bg-slate-800 text-violet-600 focus:ring-violet-500/50">
+                            <span>Latency: Low</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer hover:text-slate-400">
+                            <input type="checkbox" id="budgetSensitive" class="rounded border-slate-700 bg-slate-800 text-violet-600 focus:ring-violet-500/50">
+                            <span>Budget Sensitive</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer hover:text-slate-400">
+                            <input type="checkbox" id="teamSmall" class="rounded border-slate-700 bg-slate-800 text-violet-600 focus:ring-violet-500/50" checked>
+                            <span>Small Team</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer hover:text-slate-400">
+                            <input type="checkbox" id="riskMedium" class="rounded border-slate-700 bg-slate-800 text-violet-600 focus:ring-violet-500/50" checked>
+                            <span>Risk: Medium</span>
+                        </label>
+                    </div>
+                    <p class="text-center text-[10px] text-slate-600 mt-3">Constraints guide agent reasoning but do not force outcomes</p>
                 </div>
 
-                <div class="form-group">
-                    <label>Option B</label>
-                    <input type="text" id="optionB" value="online inference" />
+                <!-- Execution Controls -->
+                <div class="max-w-3xl mx-auto mt-6 flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <button onclick="startDecision()" id="controlRun" class="flex items-center gap-2 px-3 py-1.5 rounded bg-violet-600/20 text-violet-400 text-[11px] font-medium hover:bg-violet-600/30 transition-colors disabled:opacity-50">
+                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                            Run
+                        </button>
+                        <button onclick="clearResults()" class="flex items-center gap-2 px-3 py-1.5 rounded bg-slate-800 text-slate-400 text-[11px] hover:text-slate-300 transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            Reset
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2 text-[10px] text-slate-500">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        <span>Each run produces an immutable decision trace</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Agent Workflow Graph -->
+        <section class="border-b border-slate-800/50">
+            <div class="max-w-[1600px] mx-auto px-6 py-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold text-slate-200">Agent Execution Graph</h2>
+                    <span class="text-[10px] text-slate-500 font-mono">Parallel execution enforces independent reasoning</span>
                 </div>
 
-                <div class="form-group">
-                    <label>Latency Sensitivity</label>
-                    <select id="latency">
-                        <option value="low">Low</option>
-                        <option value="medium" selected>Medium</option>
-                        <option value="high">High</option>
-                    </select>
+                <div class="panel rounded-xl p-6 overflow-x-auto">
+                    <div class="min-w-max flex items-center gap-4">
+                        
+                        <!-- Planner -->
+                        <div id="node-planner" class="agent-node w-32 p-3 rounded-lg border border-slate-700 bg-slate-900/50 text-center cursor-pointer" onclick="showAgentDetails('planner')">
+                            <div class="w-8 h-8 mx-auto mb-2 rounded bg-slate-800 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                            </div>
+                            <p class="text-[10px] font-medium text-slate-300">Planner</p>
+                            <p class="text-[9px] text-slate-500 mt-1">Decomposes</p>
+                        </div>
+
+                        <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+
+                        <!-- Parallel Specialists -->
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center gap-2">
+                                <div id="node-systems" class="agent-node w-28 p-2 rounded-lg border border-slate-700 bg-slate-900/50 text-center cursor-pointer" onclick="showAgentDetails('systems')">
+                                    <div class="w-6 h-6 mx-auto mb-1 rounded bg-slate-800 flex items-center justify-center">
+                                        <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg>
+                                    </div>
+                                    <p class="text-[9px] font-medium text-slate-300">Systems</p>
+                                </div>
+                                <div id="node-ml_ai" class="agent-node w-28 p-2 rounded-lg border border-slate-700 bg-slate-900/50 text-center cursor-pointer" onclick="showAgentDetails('ml_ai')">
+                                    <div class="w-6 h-6 mx-auto mb-1 rounded bg-slate-800 flex items-center justify-center">
+                                        <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                                    </div>
+                                    <p class="text-[9px] font-medium text-slate-300">ML/AI</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div id="node-cost" class="agent-node w-28 p-2 rounded-lg border border-slate-700 bg-slate-900/50 text-center cursor-pointer" onclick="showAgentDetails('cost')">
+                                    <div class="w-6 h-6 mx-auto mb-1 rounded bg-slate-800 flex items-center justify-center">
+                                        <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                    <p class="text-[9px] font-medium text-slate-300">Cost</p>
+                                </div>
+                                <div id="node-product" class="agent-node w-28 p-2 rounded-lg border border-slate-700 bg-slate-900/50 text-center cursor-pointer" onclick="showAgentDetails('product')">
+                                    <div class="w-6 h-6 mx-auto mb-1 rounded bg-slate-800 flex items-center justify-center">
+                                        <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                    </div>
+                                    <p class="text-[9px] font-medium text-slate-300">Product</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+
+                        <!-- Detector (comes before Critic per schema) -->
+                        <div id="node-detector" class="agent-node w-32 p-3 rounded-lg border border-slate-700 bg-slate-900/50 text-center cursor-pointer" onclick="showAgentDetails('detector')">
+                            <div class="w-8 h-8 mx-auto mb-2 rounded bg-slate-800 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                            </div>
+                            <p class="text-[10px] font-medium text-slate-300">Detector</p>
+                            <p class="text-[9px] text-slate-500 mt-1">Finds conflicts</p>
+                        </div>
+
+                        <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+
+                        <!-- Critic -->
+                        <div id="node-critic" class="agent-node w-28 p-3 rounded-lg border border-slate-700 bg-slate-900/50 text-center cursor-pointer" onclick="showAgentDetails('critic')">
+                            <div class="w-8 h-8 mx-auto mb-2 rounded bg-slate-800 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            </div>
+                            <p class="text-[10px] font-medium text-slate-300">Critic</p>
+                            <p class="text-[9px] text-slate-500 mt-1">Challenges</p>
+                        </div>
+
+                        <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+
+                        <!-- Synthesizer -->
+                        <div id="node-synthesizer" class="agent-node w-32 p-3 rounded-lg border border-slate-700 bg-slate-900/50 text-center cursor-pointer" onclick="showAgentDetails('synthesizer')">
+                            <div class="w-8 h-8 mx-auto mb-2 rounded bg-slate-800 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                            </div>
+                            <p class="text-[10px] font-medium text-slate-300">Synthesizer</p>
+                            <p class="text-[9px] text-slate-500 mt-1">Resolves</p>
+                        </div>
+
+                        <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+
+                        <!-- Gate -->
+                        <div id="node-gate" class="agent-node w-28 p-3 rounded-lg border border-slate-700 bg-slate-900/50 text-center cursor-pointer" onclick="showAgentDetails('gate')">
+                            <div class="w-8 h-8 mx-auto mb-2 rounded bg-slate-800 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <p class="text-[10px] font-medium text-slate-300">Gate</p>
+                            <p class="text-[9px] text-slate-500 mt-1">Validates</p>
+                        </div>
+                    </div>
+
+                    <!-- Agent Details Panel -->
+                    <div id="agentDetailsPanel" class="mt-6 p-4 rounded-lg bg-slate-950/50 border border-slate-800 hidden animate-fade-in">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-200" id="agentDetailName">Systems Agent</h3>
+                                <p class="text-xs text-slate-500" id="agentDetailRole">Evaluates infrastructure, scalability, and operational concerns</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] text-slate-500 font-mono block" id="agentDetailModel">GPT-4.1</span>
+                                <span class="text-[10px] text-slate-600 font-mono" id="agentDetailTemp">temp: 0.2</span>
+                            </div>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <h4 class="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-2">Input Schema</h4>
+                                <div class="p-2 rounded bg-slate-900/80 border border-slate-800">
+                                    <pre class="text-[10px] text-slate-400 overflow-x-auto" id="agentInputSchema">{
+  "sub_problem": {"dimension": "infrastructure", "query": "string"},
+  "constraints": ["latency_sensitive"],
+  "current_architecture": {...}
+}</pre>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-2">Output Schema</h4>
+                                <div class="p-2 rounded bg-slate-900/80 border border-slate-800">
+                                    <pre class="text-[10px] text-slate-400 overflow-x-auto" id="agentOutputSchema">{
+  "recommendation": "option_a|option_b|hybrid|defer",
+  "confidence": 0.0-1.0,
+  "benefits": ["string"],
+  "risks": ["string"]
+}</pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3 flex items-center justify-between">
+                            <span class="code-ref cursor-pointer hover:text-violet-400">src/agents/systems_agent.py</span>
+                            <span class="text-[10px] text-slate-600">Agent executed independently</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Agent Outputs -->
+        <div class="max-w-[1600px] mx-auto px-6 py-6 grid lg:grid-cols-2 gap-6">
+            
+            <!-- Agent Outputs Panel -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-semibold text-slate-200">Live Agent Reasoning</h2>
+                    <div class="flex items-center gap-2">
+                        <span id="totalCost" class="cost-badge hidden">$0.00</span>
+                        <span id="totalTokens" class="token-badge hidden">0 tokens</span>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Team Size</label>
-                    <select id="teamSize">
-                        <option value="small" selected>Small</option>
-                        <option value="medium">Medium</option>
-                        <option value="large">Large</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Risk Tolerance</label>
-                    <select id="riskTolerance">
-                        <option value="low">Low</option>
-                        <option value="medium" selected>Medium</option>
-                        <option value="high">High</option>
-                    </select>
-                </div>
-
-                <div class="button-group">
-                    <button class="btn-primary" onclick="startDecision()">
-                        🚀 Start Iteration 1
-                    </button>
-                    <button class="btn-secondary" onclick="clearResults()">
-                        🗑️ Clear Results
-                    </button>
+                <div id="agentOutputs" class="space-y-3 max-h-[600px] overflow-y-auto">
+                    <div class="p-8 text-center text-slate-600 text-sm">
+                        <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                        <p>Submit a decision prompt to observe agent reasoning</p>
+                    </div>
                 </div>
             </div>
 
-            <!-- Results -->
-            <div id="results"></div>
-
-            <!-- Iteration 2 Controls -->
-            <div id="iteration2Controls" style="display: none;">
-                <div class="iteration-divider"></div>
+            <!-- Disagreement & Synthesis Panel -->
+            <div class="space-y-4">
                 
-                <div class="section">
-                    <h2>User Feedback for Iteration 2</h2>
-
-                    <div class="form-group">
-                        <label>Accepted Risks</label>
-                        <textarea id="acceptedRisks" placeholder="Enter accepted risks, one per line">Model performance may degrade between batch runs due to drift.</textarea>
+                <!-- Iteration Summary -->
+                <div id="iterationPanel" class="hidden">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        <h2 class="text-sm font-semibold text-blue-400">Iteration Summary</h2>
                     </div>
-
-                    <div class="form-group">
-                        <label>Rejected Recommendations</label>
-                        <textarea id="rejectedRecs" placeholder="Enter rejected recommendations, one per line">hybrid</textarea>
+                    <div id="iterationContent" class="iteration-card rounded-xl p-4 space-y-3">
+                        <!-- Populated dynamically -->
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label>Notes</label>
-                        <textarea id="notes" placeholder="Additional context or guidance">We accept staleness risk for v1 and prioritize operational simplicity.</textarea>
+                <!-- Disagreement Detection -->
+                <div id="disagreementPanel" class="hidden">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        <h2 class="text-sm font-semibold text-amber-400">Detected Disagreement</h2>
                     </div>
-
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="forceApprove" />
-                        <label for="forceApprove">Force Approve (Override Gate)</label>
+                    <p class="text-[10px] text-slate-500 mb-3">Disagreement is expected and required for defensible decisions</p>
+                    
+                    <div id="disagreementContent" class="disagreement-card rounded-xl p-4 space-y-3">
+                        <!-- Populated dynamically -->
                     </div>
+                </div>
 
-                    <div class="button-group">
-                        <button class="btn-primary" onclick="submitIteration2()">
-                            ⚡ Submit & Run Iteration 2
+                <!-- Critic Panel -->
+                <div id="criticPanel" class="hidden">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        <h2 class="text-sm font-semibold text-red-400">Critic Analysis</h2>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mb-3">Critic agents do not propose solutions</p>
+                    
+                    <div id="criticContent" class="critic-card rounded-xl p-4 space-y-3">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Synthesis Panel -->
+                <div id="synthesisPanel" class="hidden">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                        <h2 class="text-sm font-semibold text-violet-400">Final Synthesis</h2>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mb-3">Judgment occurs here — trade-offs resolved explicitly</p>
+                    
+                    <div id="synthesisContent" class="synthesis-card rounded-xl p-4 space-y-4">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Iteration 2 Controls (Hidden by default) -->
+        <div id="iteration2Controls" class="hidden max-w-[1400px] mx-auto px-6 pb-6">
+            <div class="border-t-2 border-dashed border-violet-500/30 pt-6 relative">
+                <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 px-4 bg-slate-950 text-violet-400 text-[10px] font-mono uppercase tracking-wider">
+                    Iteration 2
+                </div>
+                
+                <div class="panel rounded-xl p-6">
+                    <h3 class="text-sm font-semibold text-slate-200 mb-4">User Feedback for Iteration 2</h3>
+                    
+                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="text-[10px] font-mono text-slate-500 uppercase mb-2 block">Accepted Risks</label>
+                            <textarea id="acceptedRisks" class="w-full bg-slate-950/60 border border-slate-700/50 rounded-lg p-3 text-xs text-slate-300 focus:outline-none focus:border-violet-500/50 resize-none h-20" placeholder="Enter accepted risks, one per line">Model performance may degrade between batch runs due to drift.</textarea>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-mono text-slate-500 uppercase mb-2 block">Rejected Recommendations</label>
+                            <textarea id="rejectedRecs" class="w-full bg-slate-950/60 border border-slate-700/50 rounded-lg p-3 text-xs text-slate-300 focus:outline-none focus:border-violet-500/50 resize-none h-20" placeholder="Enter rejected recommendations, one per line">hybrid</textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="text-[10px] font-mono text-slate-500 uppercase mb-2 block">Notes</label>
+                        <textarea id="notes" class="w-full bg-slate-950/60 border border-slate-700/50 rounded-lg p-3 text-xs text-slate-300 focus:outline-none focus:border-violet-500/50 resize-none h-16" placeholder="Additional context or guidance">We accept staleness risk for v1 and prioritize operational simplicity.</textarea>
+                    </div>
+                    
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+                            <input type="checkbox" id="forceApprove" class="rounded border-slate-700 bg-slate-800 text-violet-600 focus:ring-violet-500/50">
+                            <span>Force Approve (Override Gate)</span>
+                        </label>
+                        
+                        <button onclick="submitIteration2()" class="ml-auto px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium rounded-lg transition-all flex items-center gap-2">
+                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                            Submit & Run Iteration 2
                         </button>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+
+        <!-- Decision Trace & Artifacts -->
+        <section class="border-t border-slate-800/50 bg-slate-950/30">
+            <div class="max-w-[1600px] mx-auto px-6 py-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold text-slate-200">Decision Trace & Artifacts</h2>
+                    <div class="flex items-center gap-2 text-[10px] text-slate-500">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        <span>All artifacts are immutable after execution</span>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex gap-1 mb-4 border-b border-slate-800">
+                    <button onclick="switchTraceTab('trace')" class="trace-tab px-4 py-2 text-[11px] font-medium text-violet-400 border-b-2 border-violet-400" data-tab="trace">Decision Trace</button>
+                    <button onclick="switchTraceTab('planner')" class="trace-tab px-4 py-2 text-[11px] font-medium text-slate-500 hover:text-slate-300" data-tab="planner">Planner</button>
+                    <button onclick="switchTraceTab('specialists')" class="trace-tab px-4 py-2 text-[11px] font-medium text-slate-500 hover:text-slate-300" data-tab="specialists">Specialists</button>
+                    <button onclick="switchTraceTab('disagreements')" class="trace-tab px-4 py-2 text-[11px] font-medium text-slate-500 hover:text-slate-300" data-tab="disagreements">Disagreements</button>
+                    <button onclick="switchTraceTab('confidence')" class="trace-tab px-4 py-2 text-[11px] font-medium text-slate-500 hover:text-slate-300" data-tab="confidence">Confidence</button>
+                </div>
+
+                <!-- Trace Content -->
+                <div id="traceContent" class="panel rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-[10px] text-slate-500 font-mono" id="tracePath">decisions/pending/trace.json</span>
+                        <button class="text-[10px] text-violet-400 hover:text-violet-300 flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Download
+                        </button>
+                    </div>
+                    <pre class="decision-trace text-slate-400 overflow-x-auto" id="traceJson">{
+  "status": "pending",
+  "message": "Submit a decision to begin"
+}</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="border-t border-slate-800 py-6 px-6">
+            <div class="max-w-[1600px] mx-auto flex flex-wrap justify-center gap-6 text-xs">
+                <a href="#" class="code-ref hover:text-violet-400 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    src/agents/
+                </a>
+                <a href="#" class="code-ref hover:text-violet-400 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    src/graph/decision_graph.py
+                </a>
+                <a href="#" class="code-ref hover:text-violet-400 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    src/synthesis/confidence_gate.py
+                </a>
+            </div>
+        </footer>
+    </main>
 
     <script>
+        // WebSocket connection
         let ws = null;
         let currentState = null;
+        let currentIteration = 0;
+        let totalCost = 0;
+        let totalTokens = 0;
+        let agentOutputs = {};
+        let runId = null;
 
-        function showStatus(message, type = 'info') {
-            const status = document.getElementById('status');
-            status.textContent = message;
-            status.className = `status ${type}`;
-            status.style.display = 'block';
+        // Agent details data
+        const agentDetails = {
+            planner: {
+                name: 'Planner Agent',
+                role: 'Decomposes complex decisions into evaluable sub-problems',
+                model: 'GPT-4.1',
+                temp: '0.1',
+                input: `{
+  "decision_question": "string",
+  "constraints": ["string"],
+  "context": {"team_size": "int", "timeline": "string"}
+}`,
+                output: `{
+  "sub_problems": [{"dimension": "string", "query": "string"}],
+  "evaluation_criteria": ["string"],
+  "success_metrics": ["string"]
+}`,
+                code: 'src/agents/planner_agent.py'
+            },
+            systems: {
+                name: 'Systems Agent',
+                role: 'Evaluates infrastructure, scalability, and operational concerns',
+                model: 'GPT-4.1',
+                temp: '0.2',
+                input: `{
+  "sub_problem": {"dimension": "infrastructure", "query": "string"},
+  "constraints": ["latency_sensitive"],
+  "current_architecture": {...}
+}`,
+                output: `{
+  "recommendation": "option_a|option_b|hybrid|defer",
+  "confidence": 0.0-1.0,
+  "benefits": ["string"],
+  "risks": ["string"]
+}`,
+                code: 'src/agents/systems_agent.py'
+            },
+            ml_ai: {
+                name: 'ML/AI Agent',
+                role: 'Assesses model performance, serving patterns, and ML engineering trade-offs',
+                model: 'GPT-4.1',
+                temp: '0.2',
+                input: `{
+  "sub_problem": {"dimension": "ml_serving", "query": "string"},
+  "model_characteristics": {"latency_ms": "int", "batchable": "bool"}
+}`,
+                output: `{
+  "recommendation": "option_a|option_b|hybrid|defer",
+  "confidence": 0.0-1.0,
+  "benefits": ["string"],
+  "risks": ["string"]
+}`,
+                code: 'src/agents/ml_ai_agent.py'
+            },
+            cost: {
+                name: 'Cost & Complexity Agent',
+                role: 'Analyzes cost structures, maintenance burden, and operational complexity',
+                model: 'GPT-4.1',
+                temp: '0.15',
+                input: `{
+  "sub_problem": {"dimension": "cost", "query": "string"},
+  "traffic_patterns": {"qps": "int", "burstiness": "float"}
+}`,
+                output: `{
+  "recommendation": "option_a|option_b|hybrid|defer",
+  "confidence": 0.0-1.0,
+  "benefits": ["string"],
+  "risks": ["string"]
+}`,
+                code: 'src/agents/cost_agent.py'
+            },
+            product: {
+                name: 'Product/Risk Agent',
+                role: 'Evaluates user impact, business risk, and product requirements',
+                model: 'GPT-4.1',
+                temp: '0.2',
+                input: `{
+  "sub_problem": {"dimension": "product_risk", "query": "string"},
+  "stakeholder_requirements": ["real_time_dashboards"]
+}`,
+                output: `{
+  "recommendation": "option_a|option_b|hybrid|defer",
+  "confidence": 0.0-1.0,
+  "benefits": ["string"],
+  "risks": ["string"]
+}`,
+                code: 'src/agents/product_agent.py'
+            },
+            critic: {
+                name: 'Critic Agent',
+                role: 'Challenges assumptions and flags overconfidence or missing considerations',
+                model: 'GPT-4.1',
+                temp: '0.3',
+                input: `{
+  "all_recommendations": [...],
+  "specialist_confidences": [...]
+}`,
+                output: `{
+  "challenged_assumptions": ["string"],
+  "overconfidence_flags": [{"agent": "string", "concern": "string"}],
+  "missing_considerations": ["string"]
+}`,
+                code: 'src/agents/critic_agent.py'
+            },
+            detector: {
+                name: 'Disagreement Detector',
+                role: 'Identifies and characterizes conflicts between specialist recommendations',
+                model: 'GPT-4.1',
+                temp: '0.1',
+                input: `{
+  "recommendations": [...],
+  "confidences": [...]
+}`,
+                output: `{
+  "disagreement_detected": true,
+  "conflict_dimensions": ["string"],
+  "severity": "low|medium|high",
+  "agent_positions": {...}
+}`,
+                code: 'src/agents/detector_agent.py'
+            },
+            synthesizer: {
+                name: 'Synthesizer Agent',
+                role: 'Resolves conflicts and produces final judgment with explicit trade-offs',
+                model: 'GPT-5',
+                temp: '0.15',
+                input: `{
+  "recommendations": [...],
+  "critic_analysis": {...},
+  "disagreement_report": {...},
+  "constraints": [...]
+}`,
+                output: `{
+  "final_recommendation": "option_a|option_b|hybrid|defer",
+  "confidence": 0.0-1.0,
+  "rationale": ["string"],
+  "tradeoffs": ["string"],
+  "unresolved_risks": ["string"]
+}`,
+                code: 'src/agents/synthesizer_agent.py'
+            },
+            gate: {
+                name: 'Confidence Gate',
+                role: 'Validates synthesis confidence against threshold; triggers re-execution if needed',
+                model: 'Rule-based',
+                temp: 'N/A',
+                input: `{
+  "synthesis_confidence": 0.0-1.0,
+  "threshold": 0.75,
+  "disagreement_severity": "string"
+}`,
+                output: `{
+  "decision": "ACCEPT|REJECT|ITERATE",
+  "action": "terminate|request_clarification|re_execute"
+}`,
+                code: 'src/agents/gate_agent.py'
+            }
+        };
+
+        function setPrompt(text) {
+            document.getElementById('decisionInput').value = text;
+            document.getElementById('decisionInput').focus();
         }
 
-        function hideStatus() {
-            document.getElementById('status').style.display = 'none';
+        function showAgentDetails(agentId) {
+            const data = agentDetails[agentId];
+            if (!data) return;
+            
+            const panel = document.getElementById('agentDetailsPanel');
+            document.getElementById('agentDetailName').textContent = data.name;
+            document.getElementById('agentDetailRole').textContent = data.role;
+            document.getElementById('agentDetailModel').textContent = data.model;
+            document.getElementById('agentDetailTemp').textContent = 'temp: ' + data.temp;
+            document.getElementById('agentInputSchema').textContent = data.input;
+            document.getElementById('agentOutputSchema').textContent = data.output;
+            
+            panel.classList.remove('hidden');
         }
 
-        function clearResults() {
-            document.getElementById('results').innerHTML = '';
-            document.getElementById('iteration2Controls').style.display = 'none';
-            hideStatus();
-        }
-
-        function appendResult(html) {
-            document.getElementById('results').innerHTML += html;
-            document.getElementById('results').scrollTop = document.getElementById('results').scrollHeight;
+        function updateConnectionStatus(status, message) {
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            const container = document.getElementById('connectionStatus');
+            
+            container.className = 'flex items-center gap-2 px-3 py-1.5 rounded-full border ' + 
+                (status === 'connected' ? 'status-connected' : 
+                 status === 'connecting' ? 'status-connecting' : 
+                 'status-error');
+            
+            dot.className = 'w-2 h-2 rounded-full ' + 
+                (status === 'connected' ? 'bg-emerald-400 animate-pulse' : 
+                 status === 'connecting' ? 'bg-amber-400' : 
+                 'bg-red-400');
+            
+            text.textContent = message;
+            text.className = 'text-[10px] font-mono uppercase tracking-wider ' + 
+                (status === 'connected' ? 'text-emerald-400' : 
+                 status === 'connecting' ? 'text-amber-400' : 
+                 'text-red-400');
         }
 
         function startDecision() {
-            clearResults();
-            showStatus('Connecting to decision system...', 'info');
+            const input = document.getElementById('decisionInput').value.trim();
+            if (!input) {
+                document.getElementById('decisionInput').focus();
+                return;
+            }
 
+            // Reset state
+            resetUI();
+            currentIteration = 1;
+            totalCost = 0;
+            totalTokens = 0;
+            agentOutputs = {};
+            
+            // Update UI
+            document.getElementById('runBtn').disabled = true;
+            document.getElementById('controlRun').disabled = true;
+            document.getElementById('runBtnText').textContent = 'Running...';
+            
+            // Connect WebSocket
             const wsUrl = `ws://localhost:8000/ws/full-trace`;
             ws = new WebSocket(wsUrl);
-
+            
+            updateConnectionStatus('connecting', 'Connecting...');
+            
             ws.onopen = () => {
-                showStatus('Connected! Starting iteration 1...', 'info');
-
+                updateConnectionStatus('connected', 'Connected');
+                
+                // Build constraints
+                const constraints = {};
+                if (document.getElementById('latencyLow').checked) constraints.latency_sensitivity = 'low';
+                if (document.getElementById('budgetSensitive').checked) constraints.budget_sensitivity = 'high';
+                if (document.getElementById('teamSmall').checked) constraints.team_size = 'small';
+                if (document.getElementById('riskMedium').checked) constraints.risk_tolerance = 'medium';
+                
                 const payload = {
                     type: 'start',
-                    decision_question: document.getElementById('question').value,
+                    decision_question: input,
                     options: {
-                        option_a: document.getElementById('optionA').value,
-                        option_b: document.getElementById('optionB').value,
+                        option_a: document.getElementById('optionA').value || 'option A',
+                        option_b: document.getElementById('optionB').value || 'option B',
                     },
-                    constraints: {
-                        latency_sensitivity: document.getElementById('latency').value,
-                        team_size: document.getElementById('teamSize').value,
-                        risk_tolerance: document.getElementById('riskTolerance').value,
-                    },
+                    constraints: constraints,
                     force_approve: false,
                 };
-
+                
                 ws.send(JSON.stringify(payload));
             };
-
+            
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 handleMessage(data);
             };
-
+            
             ws.onerror = (error) => {
-                showStatus('WebSocket error occurred', 'error');
                 console.error('WebSocket error:', error);
+                updateConnectionStatus('error', 'Connection Failed');
+                document.getElementById('runBtn').disabled = false;
+                document.getElementById('controlRun').disabled = false;
+                document.getElementById('runBtnText').textContent = 'Start Iteration 1';
             };
-
+            
             ws.onclose = () => {
-                showStatus('Connection closed', 'info');
+                updateConnectionStatus('error', 'Disconnected');
+                document.getElementById('runBtn').disabled = false;
+                document.getElementById('controlRun').disabled = false;
+                document.getElementById('runBtnText').textContent = 'Start Iteration 1';
             };
         }
 
         function handleMessage(data) {
+            // Update trace
+            updateTrace(data);
+            
             if (data.type === 'state_initialized') {
                 currentState = data.state;
-                appendResult(`
-                    <div class="agent-trace">
-                        <h4>✓ State Initialized</h4>
-                        <p><strong>Question:</strong> ${data.state.decision_question}</p>
-                    </div>
-                `);
+                runId = data.state.run_id || 'unknown';
+                document.getElementById('tracePath').textContent = `decisions/${new Date().toISOString().split('T')[0]}/${runId}/trace.json`;
             }
             else if (data.agent) {
-                const output = data.output || {};
-                const inputCtx = data.input_context || {};
-
-                appendResult(`
-                    <div class="agent-trace">
-                        <h4>🤖 ${data.agent.toUpperCase()}</h4>
-
-                        <p><strong>Tokens:</strong> ${data.input_tokens || 0} in, ${data.output_tokens || 0} out</p>
-                        <p><strong>Cost:</strong> $${data.cost_usd || 0}</p>
-
-                        ${output.recommendation ? `<p><strong>Recommendation:</strong> ${output.recommendation}</p>` : ''}
-                        ${output.confidence ? `<p><strong>Confidence:</strong> ${(output.confidence * 100).toFixed(1)}%</p>` : ''}
-
-                        <details style="margin-top:10px;">
-                            <summary><strong>🔍 Input Context</strong></summary>
-                            <pre>${JSON.stringify(inputCtx, null, 2)}</pre>
-                        </details>
-
-                        <details style="margin-top:10px;">
-                            <summary><strong>📤 Full Output</strong></summary>
-                            <pre>${JSON.stringify(output, null, 2)}</pre>
-                        </details>
-                    </div>
-                `);
+                // Agent execution event
+                handleAgentEvent(data);
             }
             else if (data.type === 'iteration_complete') {
-                appendResult(`
-                    <div class="cost-summary">
-                        <h3>📊 Iteration ${data.iteration} Complete</h3>
-                        <div class="cost-grid">
-                            <div class="cost-item">
-                                <label>Gate Tier</label>
-                                <div class="value">${data.gate_tier}</div>
-                            </div>
-                            <div class="cost-item">
-                                <label>Approved</label>
-                                <div class="value">${data.approved ? '✓' : '✗'}</div>
-                            </div>
-                            <div class="cost-item">
-                                <label>Total Tokens</label>
-                                <div class="value">${data.total_tokens}</div>
-                            </div>
-                            <div class="cost-item">
-                                <label>Total Cost</label>
-                                <div class="value">$${data.total_cost_usd}</div>
-                            </div>
-                        </div>
-                    </div>
-                `);
-
-                if (!data.approved) {
-                    document.getElementById('iteration2Controls').style.display = 'block';
-                    showStatus('Iteration 1 complete. Provide feedback for iteration 2.', 'success');
-                }
+                handleIterationComplete(data);
             }
             else if (data.type === 'authority_shift') {
-                showStatus(`Authority shifted to ${data.gate_tier} tier`, 'info');
+                // Authority shifted to new tier
+                addSystemMessage(`Authority shifted to ${data.gate_tier} tier`);
             }
             else if (data.type === 'run_complete') {
-                appendResult(`
-                    <div class="cost-summary">
-                        <h3>🎉 Decision Complete</h3>
-                        <div class="cost-grid">
-                            <div class="cost-item">
-                                <label>Final Decision</label>
-                                <div class="value">${data.approved ? 'APPROVED' : 'REJECTED'}</div>
-                            </div>
-                            <div class="cost-item">
-                                <label>Recommendation</label>
-                                <div class="value">${data.final_recommendation || 'N/A'}</div>
-                            </div>
-                            <div class="cost-item">
-                                <label>Total Tokens</label>
-                                <div class="value">${data.total_tokens}</div>
-                            </div>
-                            <div class="cost-item">
-                                <label>Total Cost</label>
-                                <div class="value">$${data.total_cost_usd}</div>
-                            </div>
-                        </div>
-                    </div>
-                `);
-                showStatus('Decision process complete!', 'success');
+                handleRunComplete(data);
             }
             else if (data.type === 'error') {
-                showStatus(`Error: ${data.message}`, 'error');
+                addErrorMessage(data.message);
+            }
+        }
+
+        function handleAgentEvent(data) {
+            const agentName = data.agent_name || data.agent;
+            const output = data.output_schema || {};
+            
+            // Track costs
+            if (data.estimated_cost_usd) {
+                totalCost += data.estimated_cost_usd;
+                document.getElementById('totalCost').textContent = `$${totalCost.toFixed(4)}`;
+                document.getElementById('totalCost').classList.remove('hidden');
+            }
+            if (data.estimated_input_tokens && data.estimated_output_tokens) {
+                totalTokens += data.estimated_input_tokens + data.estimated_output_tokens;
+                document.getElementById('totalTokens').textContent = `${totalTokens.toLocaleString()} tokens`;
+                document.getElementById('totalTokens').classList.remove('hidden');
+            }
+            
+            // Update node status
+            const nodeId = agentName === 'ml_ai' ? 'ml_ai' : agentName;
+            const node = document.getElementById(`node-${nodeId}`);
+            if (node) {
+                if (data.event_type === 'agent_started') {
+                    node.classList.add('active', 'running');
+                } else if (data.event_type === 'agent_completed') {
+                    node.classList.remove('running');
+                    node.classList.add('completed');
+                } else if (data.event_type === 'agent_failed') {
+                    node.classList.remove('running');
+                    node.classList.add('error');
+                }
+            }
+            
+            // Store output for later use
+            agentOutputs[agentName] = output;
+            
+            // Add to live outputs
+            addAgentCard(agentName, data, output);
+        }
+
+        function addAgentCard(agentName, eventData, output) {
+            const container = document.getElementById('agentOutputs');
+            
+            // Remove placeholder if exists
+            if (container.children.length === 1 && container.children[0].classList.contains('text-center')) {
+                container.innerHTML = '';
+            }
+            
+            const card = document.createElement('div');
+            card.className = 'animate-slide-up';
+            card.id = `card-${agentName}`;
+            
+            const isSpecialist = ['systems', 'ml_ai', 'cost', 'product'].includes(agentName);
+            const confidence = output.confidence || eventData.confidence;
+            const recommendation = output.recommendation || eventData.recommendation;
+            
+            let confidenceColor = 'text-slate-400';
+            if (confidence) {
+                confidenceColor = confidence > 0.8 ? 'text-emerald-400' : confidence > 0.6 ? 'text-amber-400' : 'text-slate-400';
+            }
+            
+            let html = `
+                <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-slate-700 transition-colors">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded bg-slate-800 flex items-center justify-center">
+                                <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                            </div>
+                            <span class="text-xs font-medium text-slate-300 capitalize">${agentName.replace('_', '/')} Agent</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${eventData.estimated_cost_usd ? `<span class="cost-badge">$${eventData.estimated_cost_usd.toFixed(4)}</span>` : ''}
+                            ${confidence ? `<span class="text-[10px] ${confidenceColor} font-mono">${(confidence * 100).toFixed(0)}%</span>` : ''}
+                        </div>
+                    </div>
+            `;
+            
+            if (isSpecialist && recommendation) {
+                html += `
+                    <div class="mb-2">
+                        <span class="text-[10px] text-slate-500 uppercase">Recommends</span>
+                        <p class="text-sm text-slate-200 font-medium">${recommendation.replace(/_/g, ' ')}</p>
+                    </div>
+                `;
+                
+                if (output.benefits && output.benefits.length > 0) {
+                    html += `
+                        <div class="mb-2">
+                            <span class="text-[10px] text-slate-500 uppercase">Benefits</span>
+                            <ul class="mt-1 space-y-1">
+                                ${output.benefits.map(b => `<li class="text-xs text-slate-400 flex items-start gap-2"><span class="text-emerald-500 mt-0.5">+</span>${b}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+                
+                if (output.risks && output.risks.length > 0) {
+                    html += `
+                        <div>
+                            <span class="text-[10px] text-slate-500 uppercase">Risks</span>
+                            <ul class="mt-1 space-y-1">
+                                ${output.risks.map(r => `<li class="text-xs text-slate-400 flex items-start gap-2"><span class="text-red-400 mt-0.5">−</span>${r}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+            } else if (agentName === 'planner' && output.sub_problems) {
+                html += `
+                    <div>
+                        <span class="text-[10px] text-slate-500 uppercase">Sub-problems</span>
+                        <ul class="mt-1 space-y-1">
+                            ${Object.entries(output.sub_problems).map(([key, val]) => `
+                                <li class="text-xs text-slate-400 flex items-start gap-2">
+                                    <span class="text-violet-400 mt-0.5">•</span>
+                                    <span>${val.question}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            } else if (agentName === 'detector' && output.conflicts) {
+                // Will be shown in disagreement panel
+            } else if (agentName === 'critic' && output.issues) {
+                // Will be shown in critic panel
+            } else if (agentName === 'synthesizer') {
+                // Will be shown in synthesis panel
+            }
+            
+            // Add expandable raw output
+            html += `
+                <details class="mt-3 pt-3 border-t border-slate-800">
+                    <summary class="text-[10px] text-slate-500 cursor-pointer hover:text-slate-400">Raw Output</summary>
+                    <pre class="mt-2 text-[10px] text-slate-600 overflow-x-auto">${JSON.stringify(output, null, 2)}</pre>
+                </details>
+            `;
+            
+            html += `</div>`;
+            card.innerHTML = html;
+            container.appendChild(card);
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function handleIterationComplete(data) {
+            currentIteration = data.iteration;
+            
+            // Show iteration summary
+            document.getElementById('iterationPanel').classList.remove('hidden');
+            document.getElementById('iterationContent').innerHTML = `
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-2 rounded bg-slate-950/50 border border-slate-800">
+                        <span class="text-[10px] text-slate-500 uppercase block">Gate Tier</span>
+                        <span class="text-sm text-slate-200 font-medium">${data.gate_tier || 'exploration'}</span>
+                    </div>
+                    <div class="p-2 rounded bg-slate-950/50 border border-slate-800">
+                        <span class="text-[10px] text-slate-500 uppercase block">Approved</span>
+                        <span class="text-sm ${data.approved ? 'text-emerald-400' : 'text-amber-400'} font-medium">${data.approved ? 'Yes' : 'No'}</span>
+                    </div>
+                    <div class="p-2 rounded bg-slate-950/50 border border-slate-800">
+                        <span class="text-[10px] text-slate-500 uppercase block">Total Tokens</span>
+                        <span class="text-sm text-slate-200 font-mono">${data.total_tokens?.toLocaleString() || totalTokens.toLocaleString()}</span>
+                    </div>
+                    <div class="p-2 rounded bg-slate-950/50 border border-slate-800">
+                        <span class="text-[10px] text-slate-500 uppercase block">Total Cost</span>
+                        <span class="text-sm text-slate-200 font-mono">$${data.total_cost_usd?.toFixed(4) || totalCost.toFixed(4)}</span>
+                    </div>
+                </div>
+            `;
+            
+            // Show disagreement if exists
+            const detectorOutput = agentOutputs['detector'];
+            if (detectorOutput && detectorOutput.conflicts && detectorOutput.conflicts.length > 0) {
+                showDisagreement(detectorOutput);
+            }
+            
+            // Show critic if exists
+            const criticOutput = agentOutputs['critic'];
+            if (criticOutput && criticOutput.issues && criticOutput.issues.length > 0) {
+                showCritic(criticOutput);
+            }
+            
+            // Show synthesis if exists
+            const synthesizerOutput = agentOutputs['synthesizer'];
+            if (synthesizerOutput) {
+                showSynthesis(synthesizerOutput);
+            }
+            
+            // Show iteration 2 controls if not approved
+            if (!data.approved) {
+                document.getElementById('iteration2Controls').classList.remove('hidden');
+                document.getElementById('runBtnText').textContent = 'Submit Iteration 2';
+            }
+        }
+
+        function showDisagreement(detectorOutput) {
+            document.getElementById('disagreementPanel').classList.remove('hidden');
+            
+            const conflicts = detectorOutput.conflicts || [];
+            const hasBlocking = detectorOutput.has_blocking_conflicts;
+            
+            let html = '';
+            conflicts.forEach(conflict => {
+                html += `
+                    <div class="p-3 rounded bg-slate-950/50 border border-slate-800">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-amber-400 font-medium">${conflict.description}</span>
+                            <span class="px-2 py-0.5 rounded text-[9px] ${conflict.severity === 'high' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}">${conflict.severity}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1">
+                            ${conflict.agents_involved.map(a => `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 text-[9px]">${a}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('disagreementContent').innerHTML = html;
+        }
+
+        function showCritic(criticOutput) {
+            document.getElementById('criticPanel').classList.remove('hidden');
+            
+            let html = '<div class="space-y-2">';
+            
+            if (criticOutput.issues) {
+                criticOutput.issues.forEach(issue => {
+                    html += `
+                        <div class="flex items-start gap-2 p-2 rounded bg-slate-950/50 border border-slate-800">
+                            <svg class="w-3.5 h-3.5 text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            <div>
+                                <span class="text-[10px] text-slate-500 uppercase">${issue.agent}</span>
+                                <p class="text-xs text-slate-400">${issue.issue}</p>
+                                ${issue.impact ? `<span class="text-[9px] ${issue.impact === 'high' ? 'text-red-400' : 'text-amber-400'}">${issue.impact} impact</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            if (criticOutput.challenged_assumptions) {
+                criticOutput.challenged_assumptions.forEach(assumption => {
+                    html += `
+                        <div class="flex items-start gap-2 p-2 rounded bg-slate-950/50 border border-slate-800">
+                            <svg class="w-3.5 h-3.5 text-amber-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <p class="text-xs text-slate-400">${assumption}</p>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += '</div>';
+            document.getElementById('criticContent').innerHTML = html;
+        }
+
+        function showSynthesis(synthesizerOutput) {
+            document.getElementById('synthesisPanel').classList.remove('hidden');
+            
+            const confidence = synthesizerOutput.confidence || 0;
+            const confidencePercent = Math.round(confidence * 100);
+            
+            let html = `
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-semibold text-slate-200">${synthesizerOutput.final_recommendation?.replace(/_/g, ' ') || 'No decision'}</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] text-slate-500">Confidence</span>
+                            <div class="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                <div class="h-full ${confidencePercent >= 75 ? 'bg-emerald-500' : confidencePercent >= 50 ? 'bg-amber-500' : 'bg-red-500'} rounded-full" style="width: ${confidencePercent}%"></div>
+                            </div>
+                            <span class="text-[10px] ${confidencePercent >= 75 ? 'text-emerald-400' : confidencePercent >= 50 ? 'text-amber-400' : 'text-red-400'} font-mono">${confidencePercent}%</span>
+                        </div>
+                    </div>
+            `;
+            
+            if (synthesizerOutput.rationale && synthesizerOutput.rationale.length > 0) {
+                html += `
+                    <div class="mb-3">
+                        <span class="text-[10px] text-slate-500 uppercase block mb-1">Rationale</span>
+                        <ul class="space-y-1">
+                            ${synthesizerOutput.rationale.map(r => `<li class="text-xs text-slate-400 flex items-start gap-2"><span class="text-violet-400 mt-0.5">→</span>${r}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (synthesizerOutput.tradeoffs && synthesizerOutput.tradeoffs.length > 0) {
+                html += `
+                    <div class="mb-3">
+                        <span class="text-[10px] text-slate-500 uppercase block mb-1">Trade-offs</span>
+                        <ul class="space-y-1">
+                            ${synthesizerOutput.tradeoffs.map(t => `<li class="text-xs text-slate-400 flex items-start gap-2"><span class="text-amber-400 mt-0.5">⚖</span>${t}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (synthesizerOutput.unresolved_risks && synthesizerOutput.unresolved_risks.length > 0) {
+                html += `
+                    <div>
+                        <span class="text-[10px] text-slate-500 uppercase block mb-1">Unresolved Risks</span>
+                        <div class="flex flex-wrap gap-1">
+                            ${synthesizerOutput.unresolved_risks.map(r => `<span class="px-2 py-0.5 rounded bg-red-500/10 text-red-400 text-[9px] border border-red-500/20">${r}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            document.getElementById('synthesisContent').innerHTML = html;
+        }
+
+        function handleRunComplete(data) {
+            document.getElementById('runBtn').disabled = false;
+            document.getElementById('controlRun').disabled = false;
+            document.getElementById('runBtnText').textContent = 'Start New Decision';
+            
+            addSystemMessage(`Decision complete: ${data.approved ? 'APPROVED' : 'REJECTED'}`);
+            
+            if (data.final_recommendation) {
+                addSystemMessage(`Final recommendation: ${data.final_recommendation}`);
             }
         }
 
         function submitIteration2() {
             if (!ws || ws.readyState !== WebSocket.OPEN) {
-                showStatus('WebSocket not connected', 'error');
+                addErrorMessage('WebSocket not connected');
                 return;
             }
-
-            showStatus('Submitting feedback and running iteration 2...', 'info');
-
+            
             const acceptedRisks = document.getElementById('acceptedRisks').value
                 .split('\n')
                 .filter(r => r.trim());
-
+            
             const rejectedRecs = document.getElementById('rejectedRecs').value
                 .split('\n')
                 .filter(r => r.trim());
-
+            
             const payload = {
                 type: 'user_delta',
                 accepted_risks: acceptedRisks,
@@ -578,10 +1315,103 @@
                 notes: document.getElementById('notes').value,
                 force_approve: document.getElementById('forceApprove').checked,
             };
-
+            
+            // Hide iteration 2 controls
+            document.getElementById('iteration2Controls').classList.add('hidden');
+            
+            // Clear previous outputs for new iteration
+            document.getElementById('agentOutputs').innerHTML = '';
+            document.getElementById('disagreementPanel').classList.add('hidden');
+            document.getElementById('criticPanel').classList.add('hidden');
+            document.getElementById('synthesisPanel').classList.add('hidden');
+            
+            // Reset node states
+            document.querySelectorAll('.agent-node').forEach(n => {
+                n.classList.remove('active', 'running', 'completed', 'error');
+            });
+            
             ws.send(JSON.stringify(payload));
-            document.getElementById('iteration2Controls').style.display = 'none';
         }
+
+        function addSystemMessage(message) {
+            const container = document.getElementById('agentOutputs');
+            const div = document.createElement('div');
+            div.className = 'p-3 rounded-lg bg-slate-900/30 border border-slate-800 text-center animate-fade-in';
+            div.innerHTML = `<span class="text-xs text-slate-500">${message}</span>`;
+            container.appendChild(div);
+        }
+
+        function addErrorMessage(message) {
+            const container = document.getElementById('agentOutputs');
+            const div = document.createElement('div');
+            div.className = 'p-3 rounded-lg bg-red-900/10 border border-red-500/20 text-center animate-fade-in';
+            div.innerHTML = `<span class="text-xs text-red-400">Error: ${message}</span>`;
+            container.appendChild(div);
+        }
+
+        function resetUI() {
+            document.querySelectorAll('.agent-node').forEach(n => {
+                n.classList.remove('active', 'running', 'completed', 'error');
+            });
+            document.getElementById('agentOutputs').innerHTML = `
+                <div class="p-8 text-center text-slate-600 text-sm">
+                    <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                    <p>Submit a decision prompt to observe agent reasoning</p>
+                </div>
+            `;
+            document.getElementById('disagreementPanel').classList.add('hidden');
+            document.getElementById('criticPanel').classList.add('hidden');
+            document.getElementById('synthesisPanel').classList.add('hidden');
+            document.getElementById('iterationPanel').classList.add('hidden');
+            document.getElementById('iteration2Controls').classList.add('hidden');
+            document.getElementById('agentDetailsPanel').classList.add('hidden');
+            document.getElementById('totalCost').classList.add('hidden');
+            document.getElementById('totalTokens').classList.add('hidden');
+            totalCost = 0;
+            totalTokens = 0;
+            agentOutputs = {};
+        }
+
+        function clearResults() {
+            resetUI();
+            document.getElementById('decisionInput').value = '';
+            document.getElementById('runBtnText').textContent = 'Start Iteration 1';
+            document.getElementById('traceJson').textContent = JSON.stringify({
+                status: "pending",
+                message: "Submit a decision to begin"
+            }, null, 2);
+            document.getElementById('tracePath').textContent = 'decisions/pending/trace.json';
+            
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            updateConnectionStatus('error', 'Disconnected');
+        }
+
+        function updateTrace(data) {
+            document.getElementById('traceJson').textContent = JSON.stringify(data, null, 2);
+        }
+
+        function switchTraceTab(tab) {
+            document.querySelectorAll('.trace-tab').forEach(t => {
+                if (t.dataset.tab === tab) {
+                    t.classList.remove('text-slate-500', 'border-transparent');
+                    t.classList.add('text-violet-400', 'border-b-2', 'border-violet-400');
+                } else {
+                    t.classList.add('text-slate-500');
+                    t.classList.remove('text-violet-400', 'border-b-2', 'border-violet-400');
+                }
+            });
+            
+            // In a real implementation, this would switch the trace view
+            // For now, we just show the current data
+        }
+
+        // Auto-focus on load
+        window.addEventListener('load', () => {
+            document.getElementById('decisionInput').focus();
+        });
     </script>
 </body>
 </html>
