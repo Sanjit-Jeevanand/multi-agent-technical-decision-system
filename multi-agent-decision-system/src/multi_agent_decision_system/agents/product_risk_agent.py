@@ -3,14 +3,11 @@ from pydantic import ValidationError
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
-from multi_agent_decision_system.core.state import (
-    DecisionState,
-    initialize_iteration_log,
-)
 from multi_agent_decision_system.core.schemas import AgentOutput
+from multi_agent_decision_system.core.state import DecisionState
 
 
-PRODUCT_RISK_AGENT_MODEL = "gpt-5.1-mini"
+PRODUCT_RISK_MODEL = "gpt-5.1-mini"
 
 
 PRODUCT_RISK_AGENT_PROMPT = ChatPromptTemplate.from_messages(
@@ -94,22 +91,18 @@ Assumptions:
 def run_product_risk_agent(state: DecisionState) -> dict:
     """
     Execute the Product & Risk Agent.
-    Returns PARTIAL state updates only (LangGraph-safe).
+    Returns a LangGraph-safe partial update.
     """
 
-    state = initialize_iteration_log(state)
-
-    existing_inputs = state.input_log.get("agent_inputs", {}).get("product_risk", [])
-    iteration = len(existing_inputs)
-
-    if state.plan and state.plan.product_risk:
-        planner_slice = state.plan.product_risk.model_dump()
-    else:
-        planner_slice = None
+    planner_slice = (
+        state.plan.product_risk.model_dump()
+        if state.plan and state.plan.product_risk
+        else None
+    )
 
     llm = ChatOpenAI(
-        model=PRODUCT_RISK_AGENT_MODEL,
-        temperature=0.3,
+        model=PRODUCT_RISK_MODEL,
+        temperature=0,
     )
 
     messages = PRODUCT_RISK_AGENT_PROMPT.format_messages(
@@ -120,38 +113,27 @@ def run_product_risk_agent(state: DecisionState) -> dict:
     )
 
     response = llm.invoke(messages)
-    raw_text = response.content
 
     try:
-        agent_output = AgentOutput.model_validate_json(raw_text)
+        agent_output = AgentOutput.model_validate_json(response.content)
     except ValidationError as e:
-        raise RuntimeError(
-            f"Product/Risk Agent output schema validation failed: {e}"
-        )
+        raise RuntimeError(f"Product/Risk Agent output invalid: {e}")
 
+    # 🔹 Side-channel JSON logging (NOT LangGraph state)
+    product_risk_log = {
+        "agent": "product_risk",
+        "decision_question": state.input.decision_question,
+        "constraints": state.input.constraints.model_dump(),
+        "planner_slice": planner_slice,
+        "assumptions": state.plan.assumptions if state.plan else [],
+        "output": agent_output.model_dump(),
+        "model": PRODUCT_RISK_MODEL,
+    }
+    print(json.dumps(product_risk_log))
+
+    # 🔹 LangGraph-safe partial update
     return {
         "agent_outputs": {
             "product_risk": agent_output
-        },
-        "input_log": {
-            "agent_inputs": {
-                "product_risk": [
-                    {
-                        "agent_name": "product_risk",
-                        "decision_question": state.input.decision_question,
-                        "constraints": state.input.constraints,
-                        "planner_slice": planner_slice,
-                        "assumptions": state.plan.assumptions if state.plan else [],
-                        "iteration": iteration,
-                    }
-                ]
-            }
-        },
-        "output_log": {
-            "agent_outputs": {
-                "product_risk": [
-                    agent_output.model_dump()
-                ]
-            }
-        },
+        }
     }

@@ -19,16 +19,9 @@ def test_state_initializes_correctly():
 
     # ---- Input correctness ----
     assert state.input.decision_question == decision_input.decision_question
-    assert state.input_log.initial_input["decision_question"] == decision_input.decision_question
 
     # ---- Iteration semantics ----
     assert state.termination.iteration_count == 0
-    assert state.input_log.iterations == {}
-
-    # ---- Output logs ----
-    assert state.output_log.planner_output is None
-    assert state.output_log.agent_outputs == {}
-    assert state.output_log.critic_outputs == []
 
     # ---- Authoritative state should be empty ----
     assert state.plan is None
@@ -45,3 +38,10 @@ def test_state_initializes_correctly():
     # ---- Metadata ----
     assert state.metadata.run_id is not None
     assert "created_at" in state.metadata.timestamps
+
+# Added property to DecisionState in core.schemas (assuming the file location)
+# This snippet should be added inside the DecisionState class definition:
+
+#     @property
+#     def iteration(self) -> int:
+#         return self.termination.iteration_count

@@ -72,39 +72,27 @@ def test_planner_produces_valid_bounded_output():
             }
         }
 
-        updated_state = run_planner(state)
+        updates = run_planner(state)
 
     # ------------------
     # Assert
     # ------------------
 
-    # Planner output exists
-    assert updated_state.plan is not None
-    assert isinstance(updated_state.plan, PlannerOutput)
+    assert "plan" in updates
+    assert isinstance(updates["plan"], PlannerOutput)
 
-    # At most 4 dimensions populated
     dimensions = [
-        updated_state.plan.systems,
-        updated_state.plan.ml,
-        updated_state.plan.cost,
-        updated_state.plan.product_risk,
+        updates["plan"].systems,
+        updates["plan"].ml,
+        updates["plan"].cost,
+        updates["plan"].product_risk,
     ]
     assert sum(d is not None for d in dimensions) <= 4
 
-    # Cost metadata must be populated
-    assert updated_state.plan.model_used == "gpt-5.1"
-    assert updated_state.plan.estimated_tokens_in > 0
-    assert updated_state.plan.estimated_tokens_out > 0
+    assert updates["plan"].model_used == "gpt-5.1"
+    assert updates["plan"].estimated_tokens_in > 0
+    assert updates["plan"].estimated_tokens_out > 0
 
-    # Input logging exists
-    iteration = updated_state.termination.iteration_count
-    assert iteration in updated_state.input_log.iterations
-    assert updated_state.input_log.iterations[iteration].planner_input is not None
-
-    # Output logging exists
-    assert updated_state.output_log.planner_output is not None
-
-    # Ensure planner did not recommend a decision
-    planner_dump = updated_state.plan.model_dump_json()
+    planner_dump = updates["plan"].model_dump_json()
     forbidden_terms = ["should choose", "recommend", "best option"]
     assert not any(term in planner_dump.lower() for term in forbidden_terms)

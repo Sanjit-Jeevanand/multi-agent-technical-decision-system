@@ -14,9 +14,6 @@ from multi_agent_decision_system.core.schemas import (
     TerminationState,
     HumanFeedback,
     ExecutionMetadata,
-    InputLog,
-    OutputLog,
-    IterationInputLog,
 )
 
 
@@ -30,16 +27,6 @@ class DecisionState(BaseModel):
     # IMMUTABLE INPUT
     # -----------------
     input: Annotated[DecisionInput, "immutable"]
-
-    # -----------------
-    # INPUT LOGGING
-    # -----------------
-    input_log: InputLog
-
-    # -----------------
-    # OUTPUT LOGGING
-    # -----------------
-    output_log: OutputLog
 
     # -----------------
     # PLANNER OUTPUT
@@ -116,16 +103,8 @@ def create_initial_state(
         model_versions={},
     )
 
-    input_log = InputLog(
-        initial_input=decision_input.dict()
-    )
-
-    output_log = OutputLog()
-
     return DecisionState(
         input=decision_input,
-        input_log=input_log,
-        output_log=output_log,
         plan=None,
         agent_outputs={},
         disagreements=None,
@@ -144,17 +123,9 @@ def create_initial_state(
 
 def increment_iteration(state: DecisionState) -> DecisionState:
     state.termination.iteration_count += 1
-    initialize_iteration_log(state)
     return state
 
 
 def record_timestamp(state: DecisionState, key: str) -> DecisionState:
     state.metadata.timestamps[key] = datetime.utcnow().isoformat()
-    return state
-
-
-def initialize_iteration_log(state: DecisionState) -> DecisionState:
-    i = state.termination.iteration_count
-    if i not in state.input_log.iterations:
-        state.input_log.iterations[i] = IterationInputLog()
     return state

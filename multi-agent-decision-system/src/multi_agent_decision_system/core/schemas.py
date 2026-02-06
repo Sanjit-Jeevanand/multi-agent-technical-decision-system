@@ -26,68 +26,6 @@ class DecisionInput(BaseModel):
 
 
 # -----------------------------
-# INPUT LOGGING (AUDIT / UI)
-# -----------------------------
-
-class IterationInputLog(BaseModel):
-
-    # Input provided to the planner agent
-    planner_input: Optional[Dict] = None
-
-    # Inputs provided to each specialist agent (keyed by agent name)
-    agent_inputs: Dict[str, Dict] = Field(default_factory=dict)
-
-    # Input provided to the critic agent
-    critic_input: Optional[Dict] = None
-
-    # Input provided to the synthesizer agent
-    synthesizer_input: Optional[Dict] = None
-
-
-class InputLog(BaseModel):
-
-    # Raw user-provided input at run start (immutable)
-    initial_input: Dict
-
-    # Agent-scoped inputs logged directly by each agent for audit and UI inspection.
-    agent_inputs: Dict[str, Dict] = Field(default_factory=dict)
-
-    # Inputs recorded per iteration, keyed by iteration index
-    iterations: Dict[int, IterationInputLog] = Field(default_factory=dict)
-
-
-# -----------------------------
-# OUTPUT LOGGING (AUDIT / UI)
-# -----------------------------
-
-class OutputLogEntry(BaseModel):
-    stage: str
-    payload: Dict
-
-
-class OutputLog(BaseModel):
-
-    # Planner output (single, immutable)
-    planner_output: Optional[Dict] = None
-
-    # Outputs from specialist agents, keyed by agent name,
-    # each value is a list to support multiple iterations
-    agent_outputs: Dict[str, list[Dict]] = Field(default_factory=dict)
-
-    # Disagreement detector output per iteration
-    disagreement_outputs: list[Dict] = Field(default_factory=list)
-
-    # Critic agent outputs per iteration
-    critic_outputs: list[Dict] = Field(default_factory=list)
-
-    # Synthesizer outputs per iteration
-    synthesizer_outputs: list[Dict] = Field(default_factory=list)
-
-    # Confidence and termination outputs per iteration
-    termination_outputs: list[Dict] = Field(default_factory=list)
-
-
-# -----------------------------
 # PLANNER OUTPUT
 # -----------------------------
 

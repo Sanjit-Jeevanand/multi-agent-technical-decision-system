@@ -3,14 +3,11 @@ from pydantic import ValidationError
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
-from multi_agent_decision_system.core.state import (
-    DecisionState,
-    initialize_iteration_log,
-)
 from multi_agent_decision_system.core.schemas import AgentOutput
+from multi_agent_decision_system.core.state import DecisionState
 
 
-COST_AGENT_MODEL = "gpt-5.1-mini"
+COST_MODEL = "gpt-5.1-mini"
 
 
 COST_AGENT_PROMPT = ChatPromptTemplate.from_messages(
@@ -91,76 +88,51 @@ Assumptions:
 
 
 def run_cost_agent(state: DecisionState) -> dict:
-    # ---- Initialize iteration-aware logs (idempotent) ----
-    state = initialize_iteration_log(state)
+    """
+    Execute the Cost & Complexity Agent.
+    Returns a LangGraph-safe partial update.
+    """
 
-    existing_inputs = (
-        state.input_log["agent_inputs"].get("cost", [])
-        if state.input_log and "agent_inputs" in state.input_log
-        else []
+    planner_slice = (
+        state.plan.cost.model_dump()
+        if state.plan and state.plan.cost
+        else None
     )
-    iteration = len(existing_inputs)
 
-    # ---- Extract planner slice ----
-    planner_slice = None
-    if state.plan and state.plan.cost:
-        planner_slice = state.plan.cost.model_dump()
-
-    # ---- Build explicit agent input payload ----
-    agent_input = {
-        "agent_name": "cost",
-        "decision_question": state.input.decision_question,
-        "constraints": state.input.constraints,
-        "planner_slice": planner_slice,
-        "assumptions": state.plan.assumptions if state.plan else [],
-        "iteration": iteration,
-    }
-
-    # ---- Invoke model ----
     llm = ChatOpenAI(
-        model=COST_AGENT_MODEL,
-        temperature=0.3,
+        model=COST_MODEL,
+        temperature=0,
     )
 
     messages = COST_AGENT_PROMPT.format_messages(
         decision_question=state.input.decision_question,
         constraints=state.input.constraints.model_dump(),
-        planner_slice=planner_slice,
-        assumptions=agent_input["assumptions"],
+        planner_slice=planner_slice or {},
+        assumptions=state.plan.assumptions if state.plan else [],
     )
 
     response = llm.invoke(messages)
 
-    # ---- Parse + validate output ----
     try:
         agent_output = AgentOutput.model_validate_json(response.content)
     except ValidationError as e:
-        raise RuntimeError(f"Cost Agent output schema validation failed: {e}")
+        raise RuntimeError(f"Cost Agent output invalid: {e}")
 
-    # ---- Return PARTIAL update only (merge-safe) ----
+    # 🔹 Side-channel JSON logging (NOT LangGraph state)
+    cost_log = {
+        "agent": "cost",
+        "decision_question": state.input.decision_question,
+        "constraints": state.input.constraints.model_dump(),
+        "planner_slice": planner_slice,
+        "assumptions": state.plan.assumptions if state.plan else [],
+        "output": agent_output.model_dump(),
+        "model": COST_MODEL,
+    }
+    print(json.dumps(cost_log))
+
+    # 🔹 LangGraph-safe partial update
     return {
         "agent_outputs": {
             "cost": agent_output
-        },
-        "input_log": {
-            "agent_inputs": {
-                "cost": [
-                    {
-                        "agent_name": "cost",
-                        "decision_question": state.input.decision_question,
-                        "constraints": state.input.constraints,
-                        "planner_slice": planner_slice,
-                        "assumptions": agent_input["assumptions"],
-                        "iteration": iteration,
-                    }
-                ]
-            }
-        },
-        "output_log": {
-            "agent_outputs": {
-                "cost": [
-                    agent_output.model_dump()
-                ]
-            }
-        },
+        }
     }

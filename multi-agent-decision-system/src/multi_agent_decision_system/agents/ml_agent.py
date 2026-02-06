@@ -3,14 +3,11 @@ from pydantic import ValidationError
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
-from multi_agent_decision_system.core.state import (
-    DecisionState,
-    initialize_iteration_log,
-)
 from multi_agent_decision_system.core.schemas import AgentOutput
+from multi_agent_decision_system.core.state import DecisionState
 
 
-ML_AGENT_MODEL = "gpt-5.1-mini"
+ML_MODEL = "gpt-5.1-mini"
 
 
 ML_AGENT_PROMPT = ChatPromptTemplate.from_messages(
@@ -86,63 +83,46 @@ Assumptions:
 
 def run_ml_agent(state: DecisionState) -> dict:
 
-    state = initialize_iteration_log(state)
+    planner_slice = (
+        state.plan.ml.model_dump()
+        if state.plan and state.plan.ml
+        else None
+    )
 
-    existing_inputs = state.input_log.get("agent_inputs", {}).get("ml", [])
-    iteration = len(existing_inputs)
-
-    # ---- Extract planner slice ----
-    planner_slice = None
-    if state.plan and state.plan.ml:
-        planner_slice = state.plan.ml.model_dump()
-
-    # ---- Invoke model ----
     llm = ChatOpenAI(
-        model=ML_AGENT_MODEL,
-        temperature=0.3,
+        model=ML_MODEL,
+        temperature=0,
     )
 
     messages = ML_AGENT_PROMPT.format_messages(
         decision_question=state.input.decision_question,
-        constraints=state.input.constraints or {},
+        constraints=state.input.constraints.model_dump(),
         planner_slice=planner_slice or {},
         assumptions=state.plan.assumptions if state.plan else [],
     )
 
     response = llm.invoke(messages)
-    raw_text = response.content
 
-    # ---- Parse + validate output ----
     try:
-        agent_output = AgentOutput.model_validate_json(raw_text)
+        agent_output = AgentOutput.model_validate_json(response.content)
     except ValidationError as e:
-        raise RuntimeError(f"ML Agent output schema validation failed: {e}")
+        raise RuntimeError(f"ML Agent output invalid: {e}")
 
-    # ---- Partial update and append-only logging ----
-    output = agent_output
-    input_entry = {
-        "agent_name": "ml",
+    # 🔹 Side-channel JSON logging (NOT LangGraph state)
+    ml_log = {
+        "agent": "ml",
         "decision_question": state.input.decision_question,
-        "constraints": state.input.constraints,
+        "constraints": state.input.constraints.model_dump(),
         "planner_slice": planner_slice,
         "assumptions": state.plan.assumptions if state.plan else [],
-        "iteration": iteration,
+        "output": agent_output.model_dump(),
+        "model": ML_MODEL,
     }
+    print(json.dumps(ml_log))
 
+    # 🔹 LangGraph-safe partial update
     return {
         "agent_outputs": {
-            "ml": output
-        },
-        "input_log": {
-            "agent_inputs": {
-                "ml": [input_entry]
-            }
-        },
-        "output_log": {
-            "agent_outputs": {
-                "ml": [
-                    output.model_dump()
-                ]
-            }
-        },
+            "ml": agent_output
+        }
     }
