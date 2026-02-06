@@ -1,24 +1,17 @@
 import json
 from unittest.mock import patch
 
+from multi_agent_decision_system.core.state import create_initial_state
 from multi_agent_decision_system.core.schemas import (
     DecisionInput,
     PlannerOutput,
+    AgentOutput,
 )
-from multi_agent_decision_system.core.state import create_initial_state
 from multi_agent_decision_system.core.normalization import normalize_constraints
-from multi_agent_decision_system.graph.specialist_graph import (
-    build_specialist_graph,
-)
+from multi_agent_decision_system.graph.specialist_graph import build_specialist_graph
 
 
 def test_specialist_graph_executes_all_agents_in_parallel():
-    """
-    Specialist graph should:
-    - Execute all specialist agents
-    - Allow independent writes into agent_outputs
-    - Not overwrite or block other agents
-    """
 
     # ------------------
     # Arrange
@@ -41,7 +34,7 @@ def test_specialist_graph_executes_all_agents_in_parallel():
 
     state = create_initial_state(decision_input)
 
-    # Inject planner output for all agents
+    # Inject full planner output so all agents are eligible
     state.plan = PlannerOutput(
         systems={
             "question": "Can the system meet latency requirements?",
@@ -75,15 +68,16 @@ def test_specialist_graph_executes_all_agents_in_parallel():
     # ------------------
     # Mock all agents
     # ------------------
-    mock_agent_output = lambda name: json.dumps(
-        {
-            "agent_name": name,
-            "recommendation": "defer",
-            "confidence": 0.5,
-            "benefits": ["Conservative default"],
-            "risks": ["Delayed decision"],
-        }
-    )
+    def mock_agent_output(agent_name: str):
+        return json.dumps(
+            {
+                "agent_name": agent_name,
+                "recommendation": "defer",
+                "confidence": 0.5,
+                "benefits": ["Conservative default"],
+                "risks": ["Delayed decision"],
+            }
+        )
 
     with patch(
         "multi_agent_decision_system.agents.systems_agent.ChatOpenAI"
@@ -110,19 +104,29 @@ def test_specialist_graph_executes_all_agents_in_parallel():
         final_state = graph.invoke(state)
 
     # ------------------
-    # Assert
+    # Assert: agent outputs
     # ------------------
-    assert final_state is not None
+    assert final_state.agent_outputs is not None
 
-    # All agents must have written outputs
-    assert set(final_state.agent_outputs.keys()) == {
-        "systems",
-        "ml",
-        "cost",
-        "product_risk",
-    }
+    for agent in ["systems", "ml", "cost", "product_risk"]:
+        assert agent in final_state.agent_outputs
+        assert isinstance(final_state.agent_outputs[agent], AgentOutput)
 
-    # Ensure outputs are isolated
-    for agent_name, output in final_state.agent_outputs.items():
-        assert output.agent_name == agent_name
-        assert output.confidence == 0.5
+    # ------------------
+    # Assert: input logging (parallel-safe)
+    # ------------------
+    assert "agent_inputs" in final_state.input_log
+    for agent in ["systems", "ml", "cost", "product_risk"]:
+        assert agent in final_state.input_log["agent_inputs"]
+        assert isinstance(final_state.input_log["agent_inputs"][agent], list)
+        assert len(final_state.input_log["agent_inputs"][agent]) == 1
+
+    # ------------------
+    # Assert: output logging (append-only)
+    # ------------------
+    assert "agent_outputs" in final_state.output_log
+    for agent in ["systems", "ml", "cost", "product_risk"]:
+        outputs = final_state.output_log["agent_outputs"][agent]
+        assert isinstance(outputs, list)
+        assert len(outputs) == 1
+        assert outputs[0]["agent_name"] == agent

@@ -87,24 +87,14 @@ Assumptions:
 def run_ml_agent(state: DecisionState) -> dict:
 
     state = initialize_iteration_log(state)
-    iteration = state.termination.iteration_count
+
+    existing_inputs = state.input_log.get("agent_inputs", {}).get("ml", [])
+    iteration = len(existing_inputs)
 
     # ---- Extract planner slice ----
     planner_slice = None
     if state.plan and state.plan.ml:
-        planner_slice = state.plan.ml
-
-    # ---- Explicit ML agent input logging ----
-    input_log_update = {
-        "ml": {
-            "agent_name": "ml",
-            "decision_question": state.input.decision_question,
-            "constraints": state.input.constraints,
-            "planner_slice": planner_slice,
-            "assumptions": state.plan.assumptions if state.plan else [],
-            "iteration": iteration,
-        }
-    }
+        planner_slice = state.plan.ml.model_dump()
 
     # ---- Invoke model ----
     llm = ChatOpenAI(
@@ -129,28 +119,29 @@ def run_ml_agent(state: DecisionState) -> dict:
         raise RuntimeError(f"ML Agent output schema validation failed: {e}")
 
     # ---- Partial update and append-only logging ----
+    output = agent_output
+    input_entry = {
+        "agent_name": "ml",
+        "decision_question": state.input.decision_question,
+        "constraints": state.input.constraints,
+        "planner_slice": planner_slice,
+        "assumptions": state.plan.assumptions if state.plan else [],
+        "iteration": iteration,
+    }
+
     return {
         "agent_outputs": {
-            "ml": agent_output
+            "ml": output
         },
         "input_log": {
             "agent_inputs": {
-                "ml": [
-                    {
-                        "agent_name": "ml",
-                        "decision_question": state.input.decision_question,
-                        "constraints": state.input.constraints,
-                        "planner_slice": planner_slice,
-                        "assumptions": state.plan.assumptions if state.plan else [],
-                        "iteration": iteration,
-                    }
-                ]
+                "ml": [input_entry]
             }
         },
         "output_log": {
             "agent_outputs": {
                 "ml": [
-                    agent_output.model_dump()
+                    output.model_dump()
                 ]
             }
         },

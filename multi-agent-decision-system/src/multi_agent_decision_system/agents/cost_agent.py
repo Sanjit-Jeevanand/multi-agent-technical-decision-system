@@ -91,27 +91,26 @@ Assumptions:
 
 
 def run_cost_agent(state: DecisionState) -> dict:
-    """
-    Cost agent returns PARTIAL state updates only.
-    Safe for parallel execution in LangGraph.
-    """
-
     # ---- Initialize iteration-aware logs (idempotent) ----
     state = initialize_iteration_log(state)
-    iteration = state.termination.iteration_count
+
+    existing_inputs = (
+        state.input_log["agent_inputs"].get("cost", [])
+        if state.input_log and "agent_inputs" in state.input_log
+        else []
+    )
+    iteration = len(existing_inputs)
 
     # ---- Extract planner slice ----
-    planner_slice = state.plan.cost if state.plan and state.plan.cost else None
+    planner_slice = None
+    if state.plan and state.plan.cost:
+        planner_slice = state.plan.cost.model_dump()
 
     # ---- Build explicit agent input payload ----
     agent_input = {
         "agent_name": "cost",
         "decision_question": state.input.decision_question,
-        "constraints": (
-            state.input.constraints.model_dump()
-            if state.input.constraints
-            else {}
-        ),
+        "constraints": state.input.constraints,
         "planner_slice": planner_slice,
         "assumptions": state.plan.assumptions if state.plan else [],
         "iteration": iteration,
@@ -125,44 +124,43 @@ def run_cost_agent(state: DecisionState) -> dict:
 
     messages = COST_AGENT_PROMPT.format_messages(
         decision_question=state.input.decision_question,
-        constraints=agent_input["constraints"],
-        planner_slice=planner_slice or {},
+        constraints=state.input.constraints.model_dump(),
+        planner_slice=planner_slice,
         assumptions=agent_input["assumptions"],
     )
 
     response = llm.invoke(messages)
-    raw_text = response.content
 
     # ---- Parse + validate output ----
     try:
-        agent_output = AgentOutput.model_validate_json(raw_text)
+        agent_output = AgentOutput.model_validate_json(response.content)
     except ValidationError as e:
         raise RuntimeError(f"Cost Agent output schema validation failed: {e}")
 
-    # ---- Return PARTIAL update only ----
+    # ---- Return PARTIAL update only (merge-safe) ----
     return {
+        "agent_outputs": {
+            "cost": agent_output
+        },
+        "input_log": {
+            "agent_inputs": {
+                "cost": [
+                    {
+                        "agent_name": "cost",
+                        "decision_question": state.input.decision_question,
+                        "constraints": state.input.constraints,
+                        "planner_slice": planner_slice,
+                        "assumptions": agent_input["assumptions"],
+                        "iteration": iteration,
+                    }
+                ]
+            }
+        },
+        "output_log": {
             "agent_outputs": {
-                "cost": agent_output
-            },
-            "input_log": {
-                "agent_inputs": {
-                    "cost": [
-                        {
-                            "agent_name": "cost",
-                            "decision_question": state.input.decision_question,
-                            "constraints": state.input.constraints,
-                            "planner_slice": planner_slice,
-                            "assumptions": state.plan.assumptions if state.plan else [],
-                            "iteration": iteration,
-                        }
-                    ]
-                }
-            },
-            "output_log": {
-                "agent_outputs": {
-                    "cost": [
-                        agent_output.model_dump()
-                    ]
-                }
-            },
-        }
+                "cost": [
+                    agent_output.model_dump()
+                ]
+            }
+        },
+    }

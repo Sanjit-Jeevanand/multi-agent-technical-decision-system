@@ -98,26 +98,14 @@ def run_product_risk_agent(state: DecisionState) -> dict:
     """
 
     state = initialize_iteration_log(state)
-    iteration = state.termination.iteration_count
 
-    planner_slice = (
-        state.plan.product_risk
-        if state.plan and state.plan.product_risk
-        else None
-    )
+    existing_inputs = state.input_log.get("agent_inputs", {}).get("product_risk", [])
+    iteration = len(existing_inputs)
 
-    agent_input = {
-        "agent_name": "product_risk",
-        "decision_question": state.input.decision_question,
-        "constraints": (
-            state.input.constraints.model_dump()
-            if state.input.constraints
-            else {}
-        ),
-        "planner_slice": planner_slice,
-        "assumptions": state.plan.assumptions if state.plan else [],
-        "iteration": iteration,
-    }
+    if state.plan and state.plan.product_risk:
+        planner_slice = state.plan.product_risk.model_dump()
+    else:
+        planner_slice = None
 
     llm = ChatOpenAI(
         model=PRODUCT_RISK_AGENT_MODEL,
@@ -126,9 +114,9 @@ def run_product_risk_agent(state: DecisionState) -> dict:
 
     messages = PRODUCT_RISK_AGENT_PROMPT.format_messages(
         decision_question=state.input.decision_question,
-        constraints=agent_input["constraints"],
+        constraints=state.input.constraints.model_dump(),
         planner_slice=planner_slice or {},
-        assumptions=agent_input["assumptions"],
+        assumptions=state.plan.assumptions if state.plan else [],
     )
 
     response = llm.invoke(messages)

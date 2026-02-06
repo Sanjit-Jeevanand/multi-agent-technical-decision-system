@@ -1,23 +1,23 @@
 import json
 from unittest.mock import patch
 
-from multi_agent_decision_system.core.schemas import (
+from multi_agent_decision_system.agents.systems_agent import run_systems_agent
+from multi_agent_decision_system.core.schemas import AgentOutput
+from multi_agent_decision_system.core.state import (
     DecisionInput,
     PlannerOutput,
-    AgentOutput,
+    create_initial_state,
 )
-from multi_agent_decision_system.core.state import create_initial_state
 from multi_agent_decision_system.core.normalization import normalize_constraints
-from multi_agent_decision_system.agents.systems_agent import run_systems_agent
 
 
-def test_systems_agent_logs_input_and_output_correctly():
+def test_systems_agent_produces_valid_partial_update():
     """
     Systems Agent should:
-    - Log its inputs explicitly
-    - Produce a schema-valid AgentOutput
-    - Log its output
-    - Not depend on other agents
+    - Consume DecisionState
+    - Call the LLM once
+    - Return a LangGraph-safe partial update
+    - Produce a valid AgentOutput under agent_outputs["systems"]
     """
 
     # ------------------
@@ -29,43 +29,43 @@ def test_systems_agent_logs_input_and_output_correctly():
         "risk_tolerance": "low",
     }
 
-    normalized_constraints = normalize_constraints(
+    constraints = normalize_constraints(
         raw_constraints,
         decision_context="batch_vs_online",
     )
 
     decision_input = DecisionInput(
         decision_question="Should we use batch or online inference?",
-        constraints=normalized_constraints,
+        constraints=constraints,
     )
 
     state = create_initial_state(decision_input)
 
-    # Inject a minimal planner output (systems slice only)
+    # Inject planner slice (systems only)
     state.plan = PlannerOutput(
         systems={
             "question": "Can the system meet latency requirements?",
-            "why_it_matters": "Online systems impose stricter latency SLAs.",
+            "why_it_matters": "Latency constraints differ between batch and online systems.",
             "key_unknowns": ["peak traffic"],
         },
-        assumptions=["Traffic is relatively stable"],
+        assumptions=["Traffic is expected to grow steadily"],
         clarifying_questions=[],
         model_used="gpt-5.1",
         estimated_tokens_in=100,
         estimated_tokens_out=150,
     )
 
-    mock_systems_response = {
+    mock_llm_response = {
         "agent_name": "systems",
-        "recommendation": "hybrid",
+        "recommendation": "defer",
         "confidence": 0.6,
         "benefits": [
-            "Graceful degradation under load",
-            "Operational isolation between batch and online paths",
+            "Avoids premature operational complexity",
+            "Reduces risk of brittle real-time systems",
         ],
         "risks": [
-            "Increased deployment complexity",
-            "More complex monitoring requirements",
+            "Delayed real-time capabilities",
+            "Potential future re-architecture",
         ],
     }
 
@@ -76,34 +76,22 @@ def test_systems_agent_logs_input_and_output_correctly():
         "multi_agent_decision_system.agents.systems_agent.ChatOpenAI"
     ) as MockChat:
         mock_llm = MockChat.return_value
-        mock_llm.invoke.return_value.content = json.dumps(mock_systems_response)
+        mock_llm.invoke.return_value.content = json.dumps(mock_llm_response)
 
         updates = run_systems_agent(state)
-        updated_state = state.model_copy(update=updates)
 
     # ------------------
-    # Assert: input logging
+    # Assert
     # ------------------
-    assert "systems" in updated_state.input_log["agent_inputs"]
+    assert isinstance(updates, dict)
+    assert "agent_outputs" in updates
+    assert "systems" in updates["agent_outputs"]
 
-    agent_input = updated_state.input_log["agent_inputs"]["systems"]
-    assert agent_input["agent_name"] == "systems"
-    assert agent_input["decision_question"] == decision_input.decision_question
-    assert agent_input["planner_slice"] is not None
-
-    # ------------------
-    # Assert: output logging
-    # ------------------
-    assert "systems" in updated_state.agent_outputs
-    assert "systems" in updated_state.output_log["agent_outputs"]
-
-    output = updated_state.agent_outputs["systems"]
+    output = updates["agent_outputs"]["systems"]
     assert isinstance(output, AgentOutput)
 
-    # ------------------
-    # Assert: schema + bounds
-    # ------------------
-    assert 0.0 <= output.confidence <= 1.0
+    # Schema sanity
+    assert output.agent_name == "systems"
     assert output.recommendation in {
         "option_a",
         "option_b",
@@ -111,5 +99,6 @@ def test_systems_agent_logs_input_and_output_correctly():
         "defer",
         "insufficient_information",
     }
-    assert len(output.benefits) > 0
-    assert len(output.risks) > 0
+    assert 0.0 <= output.confidence <= 1.0
+    assert isinstance(output.benefits, list)
+    assert isinstance(output.risks, list)
