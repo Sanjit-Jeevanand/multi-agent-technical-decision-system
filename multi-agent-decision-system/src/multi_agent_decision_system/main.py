@@ -1,14 +1,13 @@
 from fastapi import FastAPI
-from multi_agent_decision_system.api import router
-# main.py
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 import os
+from multi_agent_decision_system.api import router as api_router
 
-if not os.getenv("OPENAI_API_KEY"):
-    raise RuntimeError("OPENAI_API_KEY is not set")
+app = FastAPI()
 
-app = FastAPI(
-    title="Multi-Agent Technical Decision System",
-    version="0.1.0",
-)
+@app.get("/")
+def root():
+    return FileResponse("index.html")
 
-app.include_router(router)
+app.include_router(api_router)
