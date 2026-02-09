@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;450;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;450;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
@@ -24,16 +24,20 @@
                             800: '#1e293b',
                             750: '#162032',
                             700: '#334155',
+                            650: '#2d3a4f',
                         },
                         violet: {
                             400: '#a78bfa',
                             500: '#8b5cf6',
                             600: '#7c3aed',
+                            700: '#6d28d9',
                         },
                         amber: {
+                            400: '#fbbf24',
                             450: '#f59e0b',
                         },
                         emerald: {
+                            400: '#34d399',
                             450: '#10b981',
                         }
                     },
@@ -42,6 +46,7 @@
                         'fade-in': 'fadeIn 0.4s ease-out',
                         'slide-up': 'slideUp 0.3s ease-out',
                         'glow': 'glow 2s ease-in-out infinite alternate',
+                        'shimmer': 'shimmer 2s linear infinite',
                     },
                     keyframes: {
                         fadeIn: {
@@ -55,6 +60,10 @@
                         glow: {
                             '0%': { boxShadow: '0 0 5px rgba(139, 92, 246, 0.2)' },
                             '100%': { boxShadow: '0 0 20px rgba(139, 92, 246, 0.4)' },
+                        },
+                        shimmer: {
+                            '0%': { backgroundPosition: '-200% 0' },
+                            '100%': { backgroundPosition: '200% 0' },
                         }
                     }
                 }
@@ -131,7 +140,6 @@
             border: 1px solid rgba(239, 68, 68, 0.15);
         }
         
-        /* Selectable Critic Issues */
         .critic-issue-item {
             background: rgba(245, 158, 11, 0.05);
             border: 1px solid rgba(245, 158, 11, 0.2);
@@ -285,6 +293,62 @@
             border-color: rgba(239, 68, 68, 0.6);
             color: #fca5a5;
         }
+        
+        .nav-link {
+            position: relative;
+            color: #94a3b8;
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: #e2e8f0;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #8b5cf6;
+            transition: width 0.2s;
+        }
+        
+        .nav-link:hover::after, .nav-link.active::after {
+            width: 100%;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #a78bfa 0%, #60a5fa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(139, 92, 246, 0.3) 50%, transparent 100%);
+        }
+        
+        .architecture-card {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(15, 23, 42, 0.4) 100%);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            transition: all 0.3s ease;
+        }
+        
+        .architecture-card:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px -10px rgba(139, 92, 246, 0.1);
+        }
+        
+        .cost-badge {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #34d399;
+        }
+        
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
@@ -297,6 +361,39 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .flow-arrow {
+            position: relative;
+        }
+        
+        .flow-arrow::after {
+            content: '→';
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #475569;
+            font-size: 1.2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .flow-arrow::after {
+                content: '↓';
+                right: 50%;
+                top: auto;
+                bottom: -20px;
+                transform: translateX(50%);
+            }
         }
     </style>
 </head>
@@ -311,8 +408,19 @@
                 </div>
                 <div>
                     <div class="font-mono text-xs font-semibold text-slate-200 tracking-wider">MULTI-AGENT SYSTEM</div>
-                    <div class="text-[10px] text-slate-500 font-mono">Technical Decision Demo</div>
+                    <div class="text-[10px] text-slate-500 font-mono">Technical Decision Platform</div>
                 </div>
+            </div>
+            
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#demo" class="nav-link text-xs font-medium uppercase tracking-wider">Live Demo</a>
+                <a href="#architecture" class="nav-link text-xs font-medium uppercase tracking-wider">Architecture</a>
+                <a href="#agents" class="nav-link text-xs font-medium uppercase tracking-wider">Agents</a>
+                <a href="#cost" class="nav-link text-xs font-medium uppercase tracking-wider">Cost Model</a>
+                <a href="https://github.com/Sanjit-Jeevanand/multi-agent-technical-decision-system" target="_blank" class="text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    GitHub
+                </a>
             </div>
             
             <div class="flex items-center gap-4">
@@ -328,11 +436,69 @@
     <!-- Main Content -->
     <main class="flex-1 pt-14">
         
-        <!-- Decision Prompt Section -->
+        <!-- Hero Section -->
+        <section class="relative overflow-hidden border-b border-slate-800/50">
+            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-900/20 via-slate-950 to-slate-950"></div>
+            <div class="max-w-[1400px] mx-auto px-6 py-16 relative">
+                <div class="max-w-3xl">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-xs font-mono mb-6">
+                        <span class="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse"></span>
+                        Production System v1.0
+                    </div>
+                    <h1 class="text-4xl md:text-5xl font-bold text-slate-100 mb-6 leading-tight">
+                        Multi-Agent Technical<br>
+                        <span class="gradient-text">Decision System</span>
+                    </h1>
+                    <p class="text-lg text-slate-400 mb-8 leading-relaxed max-w-2xl">
+                        A structured reasoning engine that helps engineers make high-stakes technical decisions through transparent, multi-agent analysis with explicit disagreement handling and cost awareness.
+                    </p>
+                    <div class="flex flex-wrap gap-4">
+                        <a href="#demo" class="px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-lg transition-all flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Run Live Demo
+                        </a>
+                        <a href="#architecture" class="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium rounded-lg transition-all border border-slate-700">
+                            View Architecture
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Features Grid -->
         <section class="border-b border-slate-800/50 bg-slate-950/30">
+            <div class="max-w-[1400px] mx-auto px-6 py-12">
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="p-6 rounded-xl bg-slate-900/50 border border-slate-800">
+                        <div class="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center mb-4">
+                            <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-slate-200 mb-2">Explicit Disagreement</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">Unlike single-LLM systems, we surface conflicts between agents. The Disagreement Detector identifies where specialists contradict each other.</p>
+                    </div>
+                    <div class="p-6 rounded-xl bg-slate-900/50 border border-slate-800">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-4">
+                            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-slate-200 mb-2">Cost Transparency</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">Every decision iteration costs ~$0.02. We track tokens, cost per agent, and total spend in real-time. No hidden API charges.</p>
+                    </div>
+                    <div class="p-6 rounded-xl bg-slate-900/50 border border-slate-800">
+                        <div class="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center mb-4">
+                            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-slate-200 mb-2">Critic & Gate</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">A dedicated Critic Agent challenges weak reasoning. The Gate Agent enforces confidence thresholds and can force deferral if uncertain.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Demo Section -->
+        <section id="demo" class="border-b border-slate-800/50 scroll-mt-14">
             <div class="max-w-[1400px] mx-auto px-6 py-8">
                 <div class="text-center mb-6">
-                    <h1 class="text-2xl font-semibold text-slate-100 mb-2">Submit Technical Decision</h1>
+                    <h2 class="text-2xl font-semibold text-slate-100 mb-2">Submit Technical Decision</h2>
                     <p class="text-sm text-slate-500">Multiple agents will reason independently and disagree constructively</p>
                 </div>
 
@@ -565,126 +731,533 @@
         </section>
 
         <!-- Live Agent Outputs -->
-    <div class="max-w-[1600px] mx-auto px-6 py-6 grid lg:grid-cols-2 gap-6">
-        
-        <!-- Agent Outputs Panel (LEFT COLUMN) -->
-        <div class="space-y-4">
-            <div class="flex items-center justify-between">
-                <h2 class="text-sm font-semibold text-slate-200">Live Agent Reasoning</h2>
-                <span class="text-[10px] text-slate-500 font-mono">Updates as agents complete</span>
-            </div>
+        <div class="max-w-[1600px] mx-auto px-6 py-6 grid lg:grid-cols-2 gap-6">
+            
+            <!-- Agent Outputs Panel (LEFT COLUMN) -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-semibold text-slate-200">Live Agent Reasoning</h2>
+                    <span class="text-[10px] text-slate-500 font-mono">Updates as agents complete</span>
+                </div>
 
-            <div id="agentOutputs" class="space-y-3 max-h-[600px] overflow-y-auto">
-                <div class="p-8 text-center text-slate-600 text-sm">
-                    <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
-                    <p>Submit a decision prompt to observe agent reasoning</p>
+                <div id="agentOutputs" class="space-y-3 max-h-[600px] overflow-y-auto">
+                    <div class="p-8 text-center text-slate-600 text-sm">
+                        <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                        <p>Submit a decision prompt to observe agent reasoning</p>
+                    </div>
+                </div>
+
+                <!-- Disagreement Detection (MOVED TO LEFT COLUMN) -->
+                <div id="disagreementPanel" class="hidden">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        <h2 class="text-sm font-semibold text-amber-400">Detected Disagreement</h2>
+                    </div>
+                    
+                    <div id="disagreementContent" class="disagreement-card rounded-xl p-4 space-y-3">
+                    </div>
                 </div>
             </div>
 
-            <!-- Disagreement Detection (MOVED TO LEFT COLUMN) -->
-            <div id="disagreementPanel" class="hidden">
-                <div class="flex items-center gap-2 mb-3">
-                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                    <h2 class="text-sm font-semibold text-amber-400">Detected Disagreement</h2>
-                </div>
+            <!-- Synthesis & Controls Panel (RIGHT COLUMN) -->
+            <div class="space-y-4">
                 
-                <div id="disagreementContent" class="disagreement-card rounded-xl p-4 space-y-3">
+                <!-- Critic Panel -->
+                <div id="criticPanel" class="hidden">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        <h2 class="text-sm font-semibold text-red-400">Critic Analysis</h2>
+                        <span class="text-[10px] text-slate-500 ml-auto">Select risks to accept</span>
+                    </div>
+                    
+                    <div id="criticContent" class="critic-card rounded-xl p-4 space-y-3">
+                    </div>
+                    
+                    <div id="selectedRisksInfo" class="selection-info hidden">
+                        <strong>Selected Risks to Accept:</strong> <span id="selectedCount">0</span> issue(s)
+                    </div>
                 </div>
+
+                <!-- Synthesis Panel -->
+                <div id="synthesisPanel" class="hidden">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                        <h2 class="text-sm font-semibold text-violet-400">Final Synthesis</h2>
+                    </div>
+                    
+                    <div id="synthesisContent" class="synthesis-card rounded-xl p-4 space-y-4">
+                    </div>
+                </div>
+
+                <!-- Iteration 2 Controls -->
+                <div id="iteration2Controls" class="hidden">
+                    <div class="border-t-2 border-dashed border-violet-500/30 pt-6 mt-6">
+                        <div class="flex items-center gap-2 mb-4">
+                            <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            <h2 class="text-sm font-semibold text-violet-400">Iteration 2 Feedback</h2>
+                        </div>
+                        
+                        <p class="text-xs text-slate-500 mb-4">
+                            Review the critic's issues above and select which risks you're willing to accept.
+                        </p>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-[10px] text-slate-500 uppercase mb-2 block">
+                                    Rejected Recommendations
+                                </label>
+
+                                <div id="rejectedOptions" class="flex flex-wrap gap-2">
+                                    <button type="button" class="rejected-pill" data-value="option_a">
+                                        Option A
+                                    </button>
+                                    <button type="button" class="rejected-pill" data-value="option_b">
+                                        Option B
+                                    </button>
+                                    <button type="button" class="rejected-pill" data-value="hybrid">
+                                        Hybrid
+                                    </button>
+                                    <button type="button" class="rejected-pill" data-value="defer">
+                                        Defer
+                                    </button>
+                                    <button type="button" class="rejected-pill" data-value="other">
+                                        Other
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="text-[10px] text-slate-500 uppercase mb-1 block">Additional Notes</label>
+                                <textarea 
+                                    id="notes" 
+                                    class="w-full bg-slate-950/60 border border-slate-700/50 rounded-lg p-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500/50 resize-none"
+                                    rows="2"
+                                    placeholder="Additional context..."
+                                ></textarea>
+                            </div>
+                            
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="forceApprove" class="rounded border-slate-700 bg-slate-800 text-violet-600 focus:ring-violet-500/50">
+                                <span class="text-xs text-slate-400">Force Approve (Override Gate)</span>
+                            </label>
+                            
+                            <button onclick="submitIteration2()" class="w-full px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                Run Iteration 2
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
-        <!-- Synthesis & Controls Panel (RIGHT COLUMN) -->
-        <div class="space-y-4">
-            
-            <!-- Critic Panel -->
-            <div id="criticPanel" class="hidden">
-                <div class="flex items-center gap-2 mb-3">
-                    <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                    <h2 class="text-sm font-semibold text-red-400">Critic Analysis</h2>
-                    <span class="text-[10px] text-slate-500 ml-auto">Select risks to accept</span>
+        <!-- Architecture Section -->
+        <section id="architecture" class="border-t border-slate-800/50 scroll-mt-14">
+            <div class="max-w-[1400px] mx-auto px-6 py-16">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-slate-100 mb-4">System Architecture</h2>
+                    <p class="text-slate-400 max-w-2xl mx-auto">Designed to avoid single-LLM hallucination through structured multi-agent reasoning with explicit disagreement handling.</p>
                 </div>
-                
-                <div id="criticContent" class="critic-card rounded-xl p-4 space-y-3">
-                </div>
-                
-                <div id="selectedRisksInfo" class="selection-info hidden">
-                    <strong>Selected Risks to Accept:</strong> <span id="selectedCount">0</span> issue(s)
-                </div>
-            </div>
 
-            <!-- Synthesis Panel -->
-            <div id="synthesisPanel" class="hidden">
-                <div class="flex items-center gap-2 mb-3">
-                    <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-                    <h2 class="text-sm font-semibold text-violet-400">Final Synthesis</h2>
-                </div>
-                
-                <div id="synthesisContent" class="synthesis-card rounded-xl p-4 space-y-4">
-                </div>
-            </div>
+                <!-- Architecture Flow -->
+                <div class="mb-12">
+                    <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
+                        <div class="architecture-card p-6 rounded-xl text-center w-full md:w-48 flow-arrow">
+                            <div class="w-12 h-12 mx-auto mb-3 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                            </div>
+                            <h3 class="text-sm font-semibold text-slate-200 mb-1">1. Planner</h3>
+                            <p class="text-[10px] text-slate-500">Decomposes into sub-questions</p>
+                        </div>
 
-            <!-- Iteration 2 Controls -->
-            <div id="iteration2Controls" class="hidden">
-                <div class="border-t-2 border-dashed border-violet-500/30 pt-6 mt-6">
-                    <div class="flex items-center gap-2 mb-4">
-                        <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                        <h2 class="text-sm font-semibold text-violet-400">Iteration 2 Feedback</h2>
+                        <div class="architecture-card p-6 rounded-xl text-center w-full md:w-64">
+                            <div class="grid grid-cols-2 gap-2 mb-3">
+                                <div class="w-full h-10 rounded bg-slate-800 flex items-center justify-center text-[10px] text-slate-400">Systems</div>
+                                <div class="w-full h-10 rounded bg-slate-800 flex items-center justify-center text-[10px] text-slate-400">ML/AI</div>
+                                <div class="w-full h-10 rounded bg-slate-800 flex items-center justify-center text-[10px] text-slate-400">Cost</div>
+                                <div class="w-full h-10 rounded bg-slate-800 flex items-center justify-center text-[10px] text-slate-400">Product</div>
+                            </div>
+                            <h3 class="text-sm font-semibold text-slate-200 mb-1">2. Specialists</h3>
+                            <p class="text-[10px] text-slate-500">Parallel independent evaluation</p>
+                        </div>
+
+                        <div class="architecture-card p-6 rounded-xl text-center w-full md:w-48 flow-arrow">
+                            <div class="w-12 h-12 mx-auto mb-3 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                            </div>
+                            <h3 class="text-sm font-semibold text-slate-200 mb-1">3. Detector</h3>
+                            <p class="text-[10px] text-slate-500">Finds conflicts explicitly</p>
+                        </div>
+
+                        <div class="architecture-card p-6 rounded-xl text-center w-full md:w-48 flow-arrow">
+                            <div class="w-12 h-12 mx-auto mb-3 rounded-lg bg-red-500/10 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            </div>
+                            <h3 class="text-sm font-semibold text-slate-200 mb-1">4. Critic</h3>
+                            <p class="text-[10px] text-slate-500">Challenges assumptions</p>
+                        </div>
+
+                        <div class="architecture-card p-6 rounded-xl text-center w-full md:w-48 flow-arrow">
+                            <div class="w-12 h-12 mx-auto mb-3 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                            </div>
+                            <h3 class="text-sm font-semibold text-slate-200 mb-1">5. Synthesizer</h3>
+                            <p class="text-[10px] text-slate-500">Unifies recommendation</p>
+                        </div>
+
+                        <div class="architecture-card p-6 rounded-xl text-center w-full md:w-48">
+                            <div class="w-12 h-12 mx-auto mb-3 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <h3 class="text-sm font-semibold text-slate-200 mb-1">6. Gate</h3>
+                            <p class="text-[10px] text-slate-500">Final validation</p>
+                        </div>
                     </div>
-                    
-                    <p class="text-xs text-slate-500 mb-4">
-                        Review the critic's issues above and select which risks you're willing to accept.
-                    </p>
-                    
-                    <div class="space-y-3">
-                        <div>
-                            <label class="text-[10px] text-slate-500 uppercase mb-2 block">
-                                Rejected Recommendations
-                            </label>
+                </div>
 
-                            <div id="rejectedOptions" class="flex flex-wrap gap-2">
-                                <button type="button" class="rejected-pill" data-value="option_a">
-                                    Option A
-                                </button>
-                                <button type="button" class="rejected-pill" data-value="option_b">
-                                    Option B
-                                </button>
-                                <button type="button" class="rejected-pill" data-value="hybrid">
-                                    Hybrid
-                                </button>
-                                <button type="button" class="rejected-pill" data-value="defer">
-                                    Defer
-                                </button>
-                                <button type="button" class="rejected-pill" data-value="other">
-                                    Other
-                                </button>
+                <!-- Design Principles -->
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="p-6 rounded-xl bg-slate-900/30 border border-slate-800">
+                        <h4 class="text-sm font-semibold text-slate-200 mb-3 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-violet-400"></span>
+                            Narrow Roles
+                        </h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">Each agent has a strictly defined scope. The Systems Agent cannot evaluate ML feasibility. The Cost Agent cannot assess user experience. This constraint prevents single-LLM scope creep.</p>
+                    </div>
+                    <div class="p-6 rounded-xl bg-slate-900/30 border border-slate-800">
+                        <h4 class="text-sm font-semibold text-slate-200 mb-3 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                            Explicit Disagreement
+                        </h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">The Disagreement Detector forces conflicts into the open. When Systems recommends batch and Product demands real-time, this conflict is surfaced, categorized by severity, and must be resolved.</p>
+                    </div>
+                    <div class="p-6 rounded-xl bg-slate-900/30 border border-slate-800">
+                        <h4 class="text-sm font-semibold text-slate-200 mb-3 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            Schema Validation
+                        </h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">All agent outputs are validated against strict schemas. Confidence scores must be 0-1. Recommendations must be from an enum. Rationale must be a string array. No free-form text blobs.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Agents Detail Section -->
+        <section id="agents" class="border-t border-slate-800/50 bg-slate-950/20 scroll-mt-14">
+            <div class="max-w-[1400px] mx-auto px-6 py-16">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-slate-100 mb-4">Agent Specifications</h2>
+                    <p class="text-slate-400 max-w-2xl mx-auto">Each agent is a specialized reasoning unit with constrained prompts and explicit outputs.</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Planner -->
+                    <div class="p-6 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-violet-500/30 transition-all">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-200">Planner Agent</h3>
+                                <span class="text-[10px] text-slate-500 font-mono">GPT-5-mini</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4 leading-relaxed">Decomposes ambiguous technical decisions into structured sub-questions for specialist agents. Forces clarity before reasoning begins.</p>
+                        <div class="space-y-2">
+                            <div class="text-[10px] text-slate-500"><strong class="text-slate-400">Outputs:</strong> Sub-questions, assumptions, unknowns</div>
+                            <div class="text-[10px] text-slate-500"><strong class="text-slate-400">Cost:</strong> ~$0.005/run</div>
+                        </div>
+                    </div>
+
+                    <!-- Systems -->
+                    <div class="p-6 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-violet-500/30 transition-all">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-200">Systems Agent</h3>
+                                <span class="text-[10px] text-slate-500 font-mono">GPT-5-mini</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4 leading-relaxed">Evaluates infrastructure, scalability, latency, and operational complexity. Focuses on batch vs online, reliability, and ops overhead.</p>
+                        <div class="space-y-2">
+                            <div class="text-[10px] text-slate-500"><strong class="text-slate-400">Focus:</strong> Infra, scaling, reliability</div>
+                            <div class="text-[10px] text-slate-500"><strong class="text-slate-400">Cost:</strong> ~$0.0015/run</div>
+                        </div>
+                    </div>
+
+                    <!-- ML/AI -->
+                    <div class="p-6 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-violet-500/30 transition-all">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-200">ML/AI Agent</h3>
+                                <span class="text-[10px] text-slate-500 font-mono">GPT-5-mini</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4 leading-relaxed">Assesses model complexity, training vs inference costs, data requirements, and MLOps overhead. Evaluates technical feasibility of ML approaches.</p>
+                        <div class="space-y-2">
+                            <div class="text-[10px] text-slate-500"><strong class="text-slate-400">Focus:</strong> Model complexity, data, MLOps</div>
+                            <div class="text-[10px] text-slate-500"><strong class="text-slate-400">Cost:</strong> ~$0.0015/run</div>
+                        </div>
+                    </div>
+
+                    <!-- Cost -->
+                    <div class="p-6 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-violet-500/30 transition-all">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-200">Cost Agent</h3>
+                                <span class="text-[10px] text-slate-500 font-mono">GPT-5-mini</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4 leading-relaxed">Analyzes cloud costs, model inference expenses, and long-term scalability. Evaluates cost-performance trade-offs and budget impact.</p>
+                        <div class="space-y-2">
+                            <div class="text-[10px] text-slate-500"><strong class="text-slate-400">Focus:</strong> Cloud costs, ROI, scaling costs</div>
+                            <div class="text-[10px] text-slate-500"><strong class="text-slate-400">Cost:</strong> ~$0.0015/run</div>
+                        </div>
+                    </div>
+
+                    <!-- Product -->
+                    <div class="p-6 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-violet-500/30 transition-all">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-pink-500/10 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-200">Product Agent</h3>
+                                <span class="text-[10px] text-slate-500 font-mono">GPT-5-mini</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4 leading-relaxed">Evaluates user experience, market fit, feature velocity, and business alignment. Considers latency tolerance and user expectations.</p>
+                        <div class="space-y-2">
+                            <div class="text-[10px] text-slate-500"><strong class="text-slate-400">Focus:</strong> UX, velocity, market fit</div>
+                            <div class="text-[10px] text-slate-500"><strong class="text-slate-400">Cost:</strong> ~$0.0015/run</div>
+                        </div>
+                    </div>
+
+                    <!-- Detector -->
+                    <div class="p-6 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-amber-500/30 transition-all">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-200">Disagreement Detector</h3>
+                                <span class="text-[10px] text-slate-500 font-mono">GPT-5-mini</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4 leading-relaxed">Identifies conflicts between specialist recommendations. Surfaces disagreements explicitly with severity ratings and blocking status.</p>
+                        <div class="space-y-2">
+                            <div class="text-[10px] text-slate-500"><strong class="text-slate-400">Output:</strong> Conflicts, severity, agents</div>
+                            <div class="text-[10px] text-slate-500"><strong class="text-slate-400">Cost:</strong> ~$0.002/run</div>
+                        </div>
+                    </div>
+
+                    <!-- Critic -->
+                    <div class="p-6 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-red-500/30 transition-all">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-200">Critic Agent</h3>
+                                <span class="text-[10px] text-slate-500 font-mono">GPT-5-mini</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4 leading-relaxed">Challenges assumptions and identifies weak reasoning. Does not propose solutions—only attacks blind spots to force robustness.</p>
+                        <div class="space-y-2">
+                            <div class="text-[10px] text-slate-500"><strong class="text-slate-400">Output:</strong> Issues, risks, gaps</div>
+                            <div class="text-[10px] text-slate-500"><strong class="text-slate-400">Cost:</strong> ~$0.003/run</div>
+                        </div>
+                    </div>
+
+                    <!-- Synthesizer -->
+                    <div class="p-6 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-violet-500/30 transition-all">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-200">Synthesizer Agent</h3>
+                                <span class="text-[10px] text-slate-500 font-mono">GPT-5.1</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4 leading-relaxed">Integrates all perspectives into a final recommendation with confidence score, rationale, trade-offs, and unresolved risks.</p>
+                        <div class="space-y-2">
+                            <div class="text-[10px] text-slate-500"><strong class="text-slate-400">Output:</strong> Final rec, confidence, risks</div>
+                            <div class="text-[10px] text-slate-500"><strong class="text-slate-400">Cost:</strong> ~$0.003/run</div>
+                        </div>
+                    </div>
+
+                    <!-- Gate -->
+                    <div class="p-6 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-emerald-500/30 transition-all">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-200">Gate Agent</h3>
+                                <span class="text-[10px] text-slate-500 font-mono">Rule Based</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4 leading-relaxed">Validates decision quality against thresholds. Enforces minimum confidence, checks for unresolved blocking conflicts, manages approval tiers.</p>
+                        <div class="space-y-2">
+                            <div class="text-[10px] text-slate-500"><strong class="text-slate-400">Tiers:</strong> Exploration, Commitment, Override</div>
+                            <div class="text-[10px] text-slate-500"><strong class="text-slate-400">Cost:</strong> $0.00 (rule-based)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cost & Infrastructure Section -->
+        <section id="cost" class="border-t border-slate-800/50 scroll-mt-14">
+            <div class="max-w-[1400px] mx-auto px-6 py-16">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-slate-100 mb-4">Cost Model & Infrastructure</h2>
+                    <p class="text-slate-400 max-w-2xl mx-auto">Transparent pricing and serverless deployment on Google Cloud Run.</p>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-8 mb-12">
+                    <!-- Cost Breakdown -->
+                    <div class="p-6 rounded-xl bg-slate-900/50 border border-slate-800">
+                        <h3 class="text-lg font-semibold text-slate-200 mb-6">Cost Per Iteration</h3>
+                        
+                        <div class="space-y-4 mb-6">
+                            <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                                <span class="text-sm text-slate-400">Planner Agent</span>
+                                <span class="text-sm font-mono text-slate-300">$0.005</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                                <span class="text-sm text-slate-400">4× Specialist Agents</span>
+                                <span class="text-sm font-mono text-slate-300">$0.015</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                                <span class="text-sm text-slate-400">Disagreement Detector</span>
+                                <span class="text-sm font-mono text-slate-300">$0.002</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                                <span class="text-sm text-slate-400">Critic Agent</span>
+                                <span class="text-sm font-mono text-slate-300">$0.003</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                                <span class="text-sm text-slate-400">Synthesizer Agent</span>
+                                <span class="text-sm font-mono text-slate-300">$0.003</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2">
+                                <span class="text-sm text-slate-400">Gate Agent (Rule)</span>
+                                <span class="text-sm font-mono text-slate-300">$0.000</span>
                             </div>
                         </div>
                         
-                        <div>
-                            <label class="text-[10px] text-slate-500 uppercase mb-1 block">Additional Notes</label>
-                            <textarea 
-                                id="notes" 
-                                class="w-full bg-slate-950/60 border border-slate-700/50 rounded-lg p-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500/50 resize-none"
-                                rows="2"
-                                placeholder="Additional context..."
-                            ></textarea>
+                        <div class="p-4 rounded-lg bg-violet-500/10 border border-violet-500/20">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-semibold text-slate-200">Total per iteration</span>
+                                <span class="text-lg font-bold font-mono text-violet-400">~$0.02</span>
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-2">Iteration 2 (if needed) costs additional $0.02</p>
+                        </div>
+                    </div>
+
+                    <!-- Infrastructure -->
+                    <div class="p-6 rounded-xl bg-slate-900/50 border border-slate-800">
+                        <h3 class="text-lg font-semibold text-slate-200 mb-6">Hosting Architecture</h3>
+                        
+                        <div class="space-y-6">
+                            <div class="flex items-start gap-4">
+                                <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-semibold text-slate-200 mb-1">Google Cloud Run</h4>
+                                    <p class="text-xs text-slate-400 leading-relaxed">Serverless container platform with automatic scaling, WebSocket support, and pay-per-use pricing. Single-digit USD/month for idle instance.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start gap-4">
+                                <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-semibold text-slate-200 mb-1">FastAPI + Uvicorn</h4>
+                                    <p class="text-xs text-slate-400 leading-relaxed">High-performance Python backend with native WebSocket support for real-time agent execution streaming.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start gap-4">
+                                <div class="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-semibold text-slate-200 mb-1">Docker Container</h4>
+                                    <p class="text-xs text-slate-400 leading-relaxed">Reproducible deployments with locked dependency versions. Scales from zero to thousands of requests instantly.</p>
+                                </div>
+                            </div>
                         </div>
                         
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="forceApprove" class="rounded border-slate-700 bg-slate-800 text-violet-600 focus:ring-violet-500/50">
-                            <span class="text-xs text-slate-400">Force Approve (Override Gate)</span>
-                        </label>
-                        
-                        <button onclick="submitIteration2()" class="w-full px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                            Run Iteration 2
-                        </button>
+                        <div class="mt-6 p-4 rounded-lg bg-slate-950/50 border border-slate-800">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs text-slate-500">Monthly Infrastructure Cost</span>
+                                <span class="text-sm font-semibold text-emerald-400">~$5-10</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-slate-500">LLM Cost (100 decisions)</span>
+                                <span class="text-sm font-semibold text-slate-300">~$2-4</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Why This Matters -->
+                <div class="p-6 rounded-xl bg-slate-900/30 border border-slate-800">
+                    <h3 class="text-sm font-semibold text-slate-200 mb-4">Why Cost Transparency Matters</h3>
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div>
+                            <h4 class="text-xs font-semibold text-slate-300 mb-2">Budget Awareness</h4>
+                            <p class="text-[11px] text-slate-500 leading-relaxed">Users understand that AI decisions consume real resources. This prevents frivolous queries and encourages thoughtful decision formulation.</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-semibold text-slate-300 mb-2">Iteration Trade-offs</h4>
+                            <p class="text-[11px] text-slate-500 leading-relaxed">Iteration 2 costs another $0.02. Users must consciously decide if resolving uncertainty is worth the additional cost, mirroring real engineering trade-offs.</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-semibold text-slate-300 mb-2">Model Selection</h4>
+                            <p class="text-[11px] text-slate-500 leading-relaxed">Specialists use GPT-5-mini for cost efficiency. The Synthesizer uses GPT-5.1 for higher reasoning quality. This tiered approach optimizes cost/quality.</p>
+                        </div>
                     </div>
                 </div>
             </div>
+        </section>
 
-        </div>
-    </div>
+        <!-- GitHub / Docs Section -->
+        <section class="border-t border-slate-800/50 bg-slate-950/20">
+            <div class="max-w-[1400px] mx-auto px-6 py-16 text-center">
+                <h2 class="text-3xl font-bold text-slate-100 mb-4">Open Source</h2>
+                <p class="text-slate-400 max-w-2xl mx-auto mb-8">Full backend implementation, agent logic, and deployment configurations available on GitHub.</p>
+                
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <a href="https://github.com/Sanjit-Jeevanand/multi-agent-technical-decision-system" target="_blank" class="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium rounded-lg transition-all border border-slate-700 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        View on GitHub
+                    </a>
+                    <a href="https://decision-system-521270728838.europe-west1.run.app/" target="_blank" class="px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-lg transition-all flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        Live Deployment
+                    </a>
+                </div>
+                
+                <div class="mt-8 text-[10px] text-slate-600 font-mono">
+                    Built with FastAPI · WebSockets · GPT-5 · Google Cloud Run
+                </div>
+            </div>
+        </section>
     </main>
 
     <script>
@@ -696,16 +1269,11 @@
             total_tokens: 0
         };
         
-        // Track which agents are currently executing to prevent batch updates
         let executingAgents = new Set();
-        
-        // Track critic issues and selected risks
         let criticIssues = [];
         let selectedRisks = new Set();
-        // Track rejected recommendations (iteration 2)
         let rejectedSelections = new Set();
         
-        // Agent metadata
         const agentMetadata = {
             planner: {
                 name: 'Planner Agent',
@@ -715,7 +1283,7 @@
             },
             systems: {
                 name: 'Systems Agent',
-                role: 'Evaluates infrastructure, scalability, and operational concerns',
+                role: 'Evaluates infrastructure, scalability, latency, and operational concerns',
                 model: 'GPT-5-mini',
                 codeRef: 'src/agents/systems_agent.py'
             },
@@ -763,7 +1331,6 @@
             }
         };
 
-        // Store agent inputs and outputs separately
         let agentInputs = {};
         let agentOutputs = {};
 
@@ -775,14 +1342,12 @@
             document.getElementById('agentDetailRole').textContent = metadata.role;
             document.getElementById('agentDetailModel').textContent = metadata.model;
             
-            // Show actual input if available
             if (agentInputs[agentName]) {
                 document.getElementById('agentInputSchema').textContent = JSON.stringify(agentInputs[agentName], null, 2);
             } else {
                 document.getElementById('agentInputSchema').textContent = 'No input data available yet';
             }
             
-            // Show actual output if available
             if (agentOutputs[agentName]) {
                 document.getElementById('agentOutputSchema').textContent = JSON.stringify(agentOutputs[agentName], null, 2);
             } else {
@@ -793,12 +1358,10 @@
             document.getElementById('agentDetailsPanel').classList.remove('hidden');
         }
 
-        // FIXED: Only modify the specific agent, don't clear all others
         function setAgentState(agentName, state) {
             const element = document.getElementById(`agent-${agentName}`);
             if (!element) return;
 
-            // Only remove states from THIS element, not all elements
             element.classList.remove('executing', 'completed', 'failed');
             if (state) {
                 element.classList.add(state);
@@ -935,7 +1498,6 @@
         function addAgentCard(agentName, data) {
             const container = document.getElementById('agentOutputs');
             
-            // Remove placeholder if it exists
             const placeholder = container.querySelector('.text-center');
             if (placeholder) {
                 placeholder.remove();
@@ -1024,7 +1586,6 @@
         }
 
         function handleAgentCompleted(data) {
-            // Store input and output for agent details panel
             if (data.input_context) {
                 agentInputs[data.agent] = data.input_context;
             }
@@ -1032,17 +1593,14 @@
                 agentOutputs[data.agent] = data.output;
             }
             
-            // Update stats
             currentState.total_cost += data.cost_usd;
             currentState.total_tokens += data.input_tokens + data.output_tokens;
             updateCostDisplay();
             updateExecutionStats(currentState.total_tokens, currentState.total_cost, 'Running');
             
-            // Update UI - Mark THIS agent as complete (individually)
             addAgentCard(data.agent, data);
             completeAgent(data.agent);
             
-            // Handle special agent outputs
             if (data.agent === 'detector' && data.output) {
                 showDisagreement(data.output);
             } else if (data.agent === 'critic' && data.output) {
@@ -1157,7 +1715,6 @@
             panel.classList.remove('hidden');
         }
 
-        
         function processSingleMessage(data) {
             console.log('Processing:', data.type, data.agent || '');
             
@@ -1185,7 +1742,6 @@
                 alert('Error: ' + data.message);
             }
         }
-
 
         function runDecision() {
             resetUI();
@@ -1219,10 +1775,7 @@
             
             ws.onmessage = async (event) => {
                 const data = JSON.parse(event.data);
-
                 processSingleMessage(data);
-
-                // Force browser paint boundary so agents light up sequentially
                 await new Promise(requestAnimationFrame);
             };
             
@@ -1243,7 +1796,6 @@
                 return;
             }
             
-            // Build accepted risks from selected checkboxes
             const acceptedRisks = Array.from(selectedRisks).map(index => {
                 const issue = criticIssues[index];
                 return `[${issue.agent}] ${issue.issue}`;
@@ -1269,12 +1821,50 @@
             document.getElementById('iteration2Controls').classList.add('hidden');
             currentState.iteration = 2;
             
-            // Clear selections
             selectedRisks.clear();
             criticIssues = [];
             rejectedSelections.clear();
             document.querySelectorAll('.rejected-pill').forEach(b => b.classList.remove('selected'));
         }
+
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Active nav link highlighting
+        const observerOptions = {
+            root: null,
+            rootMargin: '-20% 0px -80% 0px',
+            threshold: 0
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.getAttribute('id');
+                    document.querySelectorAll('.nav-link').forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === `#${id}`) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section[id]').forEach((section) => {
+            observer.observe(section);
+        });
     </script>
 </body>
 </html>

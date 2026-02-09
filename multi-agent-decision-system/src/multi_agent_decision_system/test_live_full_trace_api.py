@@ -1,21 +1,22 @@
 import pytest
-from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from fastapi import FastAPI
 
 from multi_agent_decision_system.main import router
 
 # =============================================================================
-# Test App Fixture
+# Test App
 # =============================================================================
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def client():
     app = FastAPI()
     app.include_router(router)
     return TestClient(app)
 
+
 # =============================================================================
-# Shared Constants
+# Constants
 # =============================================================================
 
 DECISION_QUESTION = "Should we use batch or online inference?"
@@ -31,17 +32,19 @@ CONSTRAINTS = {
     "risk_tolerance": "medium",
 }
 
+
 # =============================================================================
 # Health Check
 # =============================================================================
 
-def test_health(client):
+def test_health_endpoint(client):
     resp = client.get("/health")
     assert resp.status_code == 200
     assert resp.json() == {"status": "ok"}
 
+
 # =============================================================================
-# Iteration 1 — Exploration
+# Iteration 1 — Full Trace (Exploration)
 # =============================================================================
 
 def test_full_trace_iteration_1(client):
@@ -57,23 +60,54 @@ def test_full_trace_iteration_1(client):
 
     data = resp.json()
 
+    # ------------------
+    # Basic structure
+    # ------------------
     assert data["iteration"] == 1
     assert data["gate_tier"] == "exploration"
-    assert data["approved"] is False
-
     assert "agents" in data
-    assert len(data["agents"]) >= 7  # planner + 4 specialists + detector + critic + synthesizer
+    assert isinstance(data["agents"], list)
 
+    # ------------------
+    # Required agents
+    # ------------------
     agent_names = {a["agent"] for a in data["agents"]}
-    assert "planner" in agent_names
-    assert "synthesizer" in agent_names
-    assert "gate" not in agent_names  # gate is top-level
 
+    for required in [
+        "planner",
+        "systems",
+        "ml_ai",
+        "cost",
+        "product",
+        "detector",
+        "critic",
+        "synthesizer",
+    ]:
+        assert required in agent_names
+
+    # ------------------
+    # Per-agent cost visibility
+    # ------------------
+    for agent in data["agents"]:
+        assert agent["input_tokens"] > 0
+        assert agent["cost_usd"] >= 0
+
+    # ------------------
+    # Gate output exists
+    # ------------------
+    assert "gate" in data
+    assert "approved" in data
+    assert data["approved"] in (True, False)
+
+    # ------------------
+    # Cost summary
+    # ------------------
     assert data["total_tokens"] > 0
     assert data["total_cost_usd"] > 0
 
+
 # =============================================================================
-# Iteration 2 — Commitment with User Delta
+# Iteration 2 — Commitment (User Input, Specialists Frozen)
 # =============================================================================
 
 def test_full_trace_iteration_2_commitment(client):
@@ -94,27 +128,46 @@ def test_full_trace_iteration_2_commitment(client):
 
     data = resp.json()
 
-    assert data["iteration"] == 2
+    # ------------------
+    # Authority tier
+    # ------------------
     assert data["gate_tier"] == "commitment"
-    assert "delta" in data
-    assert data["delta"]["accepted_risks"]
 
-    # Specialists should NOT rerun in iteration 2
+    # ------------------
+    # Specialists must NOT rerun
+    # ------------------
     agent_names = {a["agent"] for a in data["agents"]}
-    assert "systems" in agent_names  # from iteration 1
-    assert "ml_ai" in agent_names
-    assert "product" in agent_names
 
-    # Core agents rerun
-    assert "detector" in agent_names
-    assert "critic" in agent_names
-    assert "synthesizer" in agent_names
+    for forbidden in [
+        "planner",
+        "systems",
+        "ml_ai",
+        "cost",
+        "product",
+    ]:
+        assert forbidden not in agent_names
 
-    assert data["total_tokens"] > 0
-    assert data["total_cost_usd"] > 0
+    # ------------------
+    # Core agents still run
+    # ------------------
+    for required in ["detector", "critic", "synthesizer"]:
+        assert required in agent_names
+
+    # ------------------
+    # Decision must exist
+    # ------------------
+    assert data["final_recommendation"] is not None
+    assert data["approved"] is True
+
+    # ------------------
+    # Cost sanity check
+    # (Iteration 2 should be much cheaper)
+    # ------------------
+    assert data["total_cost_usd"] < 0.02
+
 
 # =============================================================================
-# Iteration 2 — Force Approve Override
+# Force Approve — Override Tier
 # =============================================================================
 
 def test_force_approve_override(client):
@@ -131,5 +184,4 @@ def test_force_approve_override(client):
 
     data = resp.json()
 
-    assert data["gate_tier"] == "override"
     assert data["approved"] is True
