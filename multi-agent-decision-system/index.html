@@ -1240,8 +1240,9 @@
             
             ws.onclose = () => {
                 updateConnectionStatus(false);
-
-                if (!runFinished) {
+                // Only mark as failed if we haven't already completed successfully
+                const currentStatus = document.getElementById('executionStatus').textContent;
+                if (!runFinished && !currentStatus.includes('Complete')) {
                     updateExecutionStats(currentState.total_tokens, currentState.total_cost, 'Failed');
                 }
             };

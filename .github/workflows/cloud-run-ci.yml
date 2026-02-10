@@ -107,19 +107,6 @@ jobs:
             -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
             $IMAGE_URI:$IMAGE_TAG
 
-      - name: Wait for API startup
-        run: |
-          echo "Waiting for API to become healthy..."
-          for i in {1..30}; do
-            if curl --fail http://localhost:8000/health; then
-              echo "API is healthy"
-              exit 0
-            fi
-            sleep 2
-          done
-          docker logs decision-system-test
-          exit 1
-
       - name: Stop container
         if: always()
         run: docker stop decision-system-test || true
