@@ -66,9 +66,10 @@ jobs:
       - name: Build Docker image
         run: |
           docker build \
+            -f multi-agent-decision-system/Dockerfile \
             -t $IMAGE_URI:$IMAGE_TAG \
             -t $IMAGE_URI:latest \
-            .
+            multi-agent-decision-system
 
       # ----------------------------
       # Push image to Artifact Registry
