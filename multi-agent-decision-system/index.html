@@ -695,6 +695,7 @@
             total_cost: 0,
             total_tokens: 0
         };
+        let runFinished = false;
         
         // Track which agents are currently executing to prevent batch updates
         let executingAgents = new Set();
@@ -929,6 +930,7 @@
                 total_cost: 0,
                 total_tokens: 0
             };
+            runFinished = false;
             updateCostDisplay();
         }
 
@@ -1177,6 +1179,7 @@
             } else if (data.type === 'authority_shift') {
                 console.log('Authority shifted to:', data.gate_tier);
             } else if (data.type === 'run_complete') {
+                runFinished = true;
                 updateExecutionStats(currentState.total_tokens, currentState.total_cost, 'Completed');
                 console.log('Run complete:', data.final_recommendation);
             } else if (data.type === 'error') {
@@ -1229,11 +1232,18 @@
             ws.onerror = (error) => {
                 console.error('WebSocket error:', error);
                 updateConnectionStatus(false);
-                updateExecutionStats(currentState.total_tokens, currentState.total_cost, 'Failed');
+
+                if (!runFinished) {
+                    updateExecutionStats(currentState.total_tokens, currentState.total_cost, 'Failed');
+                }
             };
             
             ws.onclose = () => {
                 updateConnectionStatus(false);
+
+                if (!runFinished) {
+                    updateExecutionStats(currentState.total_tokens, currentState.total_cost, 'Failed');
+                }
             };
         }
 
