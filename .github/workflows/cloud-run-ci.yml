@@ -1,0 +1,124 @@
+name: decision-system-ci
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_ID: finance-dis-prod
+  REGION: europe-west1
+  SERVICE_NAME: decision-system
+  AR_REPO: decision-system
+  IMAGE_NAME: decision-system
+  PORT: 8000
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ----------------------------
+      # Checkout
+      # ----------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ----------------------------
+      # Authenticate to Google Cloud (SERVICE ACCOUNT KEY)
+      # ----------------------------
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      # ----------------------------
+      # Setup gcloud
+      # ----------------------------
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      # ----------------------------
+      # Configure Docker for Artifact Registry
+      # ----------------------------
+      - name: Configure Docker
+        run: |
+          gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
+
+      # ----------------------------
+      # Set image variables (lowercase-safe)
+      # ----------------------------
+      - name: Set image variables
+        run: |
+          IMAGE_URI="$REGION-docker.pkg.dev/$PROJECT_ID/$AR_REPO/$IMAGE_NAME"
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+          echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      # ----------------------------
+      # Build Docker image
+      # ----------------------------
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t $IMAGE_URI:$IMAGE_TAG \
+            -t $IMAGE_URI:latest \
+            .
+
+      # ----------------------------
+      # Push image to Artifact Registry
+      # ----------------------------
+      - name: Push Docker image
+        run: |
+          docker push $IMAGE_URI:$IMAGE_TAG
+          docker push $IMAGE_URI:latest
+
+      # ----------------------------
+      # Deploy to Cloud Run
+      # ----------------------------
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy $SERVICE_NAME \
+            --image $IMAGE_URI:latest \
+            --region $REGION \
+            --platform managed \
+            --allow-unauthenticated \
+            --port $PORT \
+            --cpu 1 \
+            --memory 2Gi \
+            --timeout 900 \
+            --min-instances 1 \
+            --concurrency 1
+
+      # ----------------------------
+      # Local smoke test (optional but recommended)
+      # ----------------------------
+      - name: Run container locally
+        run: |
+          docker run -d \
+            -p 8000:8000 \
+            --name decision-system-test \
+            -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+            $IMAGE_URI:$IMAGE_TAG
+
+      - name: Wait for API startup
+        run: |
+          echo "Waiting for API to become healthy..."
+          for i in {1..30}; do
+            if curl --fail http://localhost:8000/health; then
+              echo "API is healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs decision-system-test
+          exit 1
+
+      - name: Stop container
+        if: always()
+        run: docker stop decision-system-test || true
