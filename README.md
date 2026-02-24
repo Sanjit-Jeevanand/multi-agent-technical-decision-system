@@ -1,7 +1,7 @@
 # Multi-Agent Technical Decision System
 
 **Live Demo (UI):**  
-https://storage.googleapis.com/decision-system-site/index.html  
+https://sanjit-ml.com/decision-system-ui/demo.html
 
 **Backend (Cloud Run):**  
 https://decision-system-521270728838.europe-west1.run.app  
